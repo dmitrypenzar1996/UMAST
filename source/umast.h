@@ -1,4 +1,4 @@
-/*  Copyright 2016, 2017 Andrey Sigorskikh, Sergei Spirin 
+/*  Copyright 2016, 2017 Andrey Sigorskikh, Sergei Spirin
 
     This file is part of UMAST.
 
@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with UMAST (a file named "COPYING.txt"). 
+    along with UMAST (a file named "COPYING.txt").
     If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -21,7 +21,8 @@
 #define _UMAST_H_
 #include "Tree.h"
 #include "add.h"
-#include "consensus.h"
+#include "Branch.h"
+#include "BranchArray.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -33,7 +34,8 @@ Tree* treeUnRoot(Tree* tree, char newTree);
 unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation);
 int* calculateLeavesPermutation(Tree* tree1, Tree* tree2);
 int branchGetLeavesPosNum(Branch* br);
-int* countVariants(Branch*** TAB, int a, int w, int b, int c, int x, int y);
+void countVariants(Branch*** TAB, int a, int w, int b, int c, int x, int y,
+    int* bestValue, int* bestPos);
 int* getTreeLeavesPos(Tree* tree);
 unsigned* branchToLeavesArr(Branch* br, unsigned leavesNum);
 int** getAllRoots(Tree* tree);

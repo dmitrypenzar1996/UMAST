@@ -23,14 +23,16 @@ Tree.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/Tree.c
 RMQ.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/RMQ.c
 	gcc -O2 -c $(SOURCE_DIR)/RMQ.c -o $(LINK_DIR)/RMQ.o
 
-consensus.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/consensus.c
-	gcc -O2 -c $(SOURCE_DIR)/consensus.c -o $(LINK_DIR)/consensus.o
+Branch.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/Branch.c
+	gcc -O2 -c $(SOURCE_DIR)/Branch.c -o $(LINK_DIR)/Branch.o
+
+BranchArray.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/BranchArray.c
+	gcc -O2 -c $(SOURCE_DIR)/BranchArray.c -o $(LINK_DIR)/BranchArray.o
 
 umast.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/umast.c
 	gcc -O2 -c $(SOURCE_DIR)/umast.c -o $(LINK_DIR)/umast.o 
 
-umast : umast.o add.o Tree.o RMQ.o consensus.o
+umast : umast.o add.o Tree.o RMQ.o Branch.o BranchArray.o
 	gcc $(LINK_DIR)/umast.o $(LINK_DIR)/add.o\
 	    $(LINK_DIR)/Tree.o $(LINK_DIR)/RMQ.o \
-	    $(LINK_DIR)/consensus.o\
-	    -lm -o umast.exe
+	    $(LINK_DIR)/Branch.o $(LINK_DIR)/BranchArray.o -lm -o umast.exe
