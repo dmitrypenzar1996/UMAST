@@ -29,10 +29,14 @@ Branch.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/Branch.c
 BranchArray.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/BranchArray.c
 	gcc -O2 -c $(SOURCE_DIR)/BranchArray.c -o $(LINK_DIR)/BranchArray.o
 
+BranchAllocator.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/BranchAllocator.c
+	gcc -O2 -c $(SOURCE_DIR)/BranchAllocator.c -o $(LINK_DIR)/BranchAllocator.o
+
 umast.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/umast.c
 	gcc -O2 -c $(SOURCE_DIR)/umast.c -o $(LINK_DIR)/umast.o 
 
-umast : umast.o add.o Tree.o RMQ.o Branch.o BranchArray.o
+umast : umast.o add.o Tree.o RMQ.o Branch.o BranchArray.o BranchAllocator.o
 	gcc $(LINK_DIR)/umast.o $(LINK_DIR)/add.o\
-	    $(LINK_DIR)/Tree.o $(LINK_DIR)/RMQ.o \
-	    $(LINK_DIR)/Branch.o $(LINK_DIR)/BranchArray.o -lm -o umast.exe
+	    $(LINK_DIR)/Tree.o $(LINK_DIR)/RMQ.o\
+	    $(LINK_DIR)/Branch.o $(LINK_DIR)/BranchArray.o\
+            $(LINK_DIR)/BranchAllocator.o  -lm -o umast.exe

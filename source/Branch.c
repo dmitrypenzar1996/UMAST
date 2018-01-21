@@ -62,6 +62,7 @@ Branch* branchOr(Branch* br1, Branch* br2)
     {
         orBranch->branch[i] = br1->branch[i] | br2->branch[i];
     }
+    orBranch->leavesNum = -1;
     return orBranch;
 }
 
@@ -114,8 +115,23 @@ Branch* branchAnd(Branch* br1, Branch* br2)
     {
         andBranch->branch[i] = br1->branch[i] & br2->branch[i];
     }
-
+    andBranch->leavesNum = -1;
     return andBranch;
+}
+
+void branchAndDest(Branch* br1, Branch* br2, Branch* andBranch){
+    int i = 0;
+    if (br1->size != br2->size || andBranch->size != br2->size)
+    {
+        fprintf(stderr, "branchAndDest: Branches are not of the same size\n");
+        exit(1);
+    }
+
+    for(i = 0; i < branchGetIntSize(br1); ++i)
+    {
+        andBranch->branch[i] = br1->branch[i] & br2->branch[i];
+    }
+    andBranch->leavesNum = -1;
 }
 
 unsigned countZeroRightNum_(INT p)
@@ -171,7 +187,7 @@ size_t* branchGetLeavesPos(Branch* br, size_t* leavesNum, size_t maxNum)
         while(j < intSize)
         {
             k = countZeroRightNum((br->branch[i]) >> j);
-            if (k != 32)
+            if (k != intSize)
             {
                 positions[curSize++] = k + j +  i * intSize;
             }
@@ -327,6 +343,7 @@ Branch* branchReverse(Branch* br)
     {
         revBranch->branch[i] = ~br->branch[i];
     }
+    revBranch->leavesNum = -1;
     return revBranch;
 }
 
@@ -338,6 +355,7 @@ Branch* branchCopy(Branch* br)
     {
         copy->branch[i] = br->branch[i];
     }
+    copy->leavesNum = br->leavesNum;
     return copy;
 }
 
@@ -352,6 +370,7 @@ Branch* branchCopyToDest(Branch* br, Branch* dest){
   for(i = 0; i < branchGetIntSize(br); ++i){
       dest->branch[i] = br->branch[i];
   }
+  dest->leavesNum = br->leavesNum;
   return dest;
 }
 
@@ -359,6 +378,7 @@ void branchAddLeafUnsafe(Branch* br, int leafPos){
     INT p = 1;
     p = p << (leafPos & (intSize - 1));
     br->branch[leafPos / intSize] |= p;
+    ++br->leavesNum;
 }
 
 char branchIsZero(Branch* br)

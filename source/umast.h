@@ -23,8 +23,11 @@
 #include "add.h"
 #include "Branch.h"
 #include "BranchArray.h"
+#include "BranchAllocator.h"
 #include <stdlib.h>
 #include <string.h>
+
+const nodeTypeCount = 6;
 
 BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation);
 Tree* deleteLeaves(Tree* tree, char** leavesToDelete, int leavesToDeleteAmount);

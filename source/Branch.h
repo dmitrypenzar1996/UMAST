@@ -56,6 +56,8 @@ char branchIsSubset(Branch* br1, Branch* br2);
 
 Branch* branchAnd(Branch* br1, Branch* br2);
 
+void branchAndDest(Branch* br1, Branch* br2, Branch* andBranch);
+
 Branch* branchOr(Branch* br1, Branch* br2);
 
 void branchOrSumDest(Branch* br1, Branch* br2, Branch* orBranch);
@@ -65,6 +67,8 @@ void branchOrDest(Branch* br1, Branch* br2, Branch* orBranch);
 Branch* branchReverse(Branch* br);
 
 Branch* branchCopy(Branch* br);
+
+Branch* branchCopyToDest(Branch* br, Branch* dest);
 
 char branchIsZero(Branch* br);
 

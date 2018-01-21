@@ -31,8 +31,9 @@ BranchAllocator* branchAllocatorCreate(unsigned capacity, unsigned treeLeavesNum
     allocator->length = 0;
     allocator->capacity = capacity;
     allocator->treeLeavesNum = treeLeavesNum;
-    allocator->store = malloc(branchFullSize * capacity);
+    allocator->store = calloc(capacity, branchFullSize);
     allocator->branchFullSize = branchFullSize;
+    return allocator;
 }
 
 void branchAllocatorDelete(BranchAllocator* allocator){
