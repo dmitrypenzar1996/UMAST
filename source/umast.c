@@ -1332,12 +1332,28 @@ void UMAST(Tree* intree1, Tree* intree2){
     sortedSet2 = treeRootAndTopSort(tree2, 1, 0, setPermutation2);
 
     Branch**** TAB = (Branch****)calloc(nodeTypeCount, sizeof(Branch***));
-    for (k = 0; k < nodeTypeCount; ++k){
-        TAB[k] = (Branch***)calloc(tree2->nodesNum, sizeof(Branch**));
-        for(i = 0; i < tree2->nodesNum; ++i){
-            TAB[k][i] = (Branch**)calloc(tree2->nodesNum, sizeof(Branch*));
+    //for (k = 0; k < nodeTypeCount; ++k){
+    //    TAB[k] = (Branch***)calloc(tree2->nodesNum, sizeof(Branch**));
+    //    for(i = 0; i < tree2->nodesNum; ++i){
+    //        TAB[k][i] = (Branch**)calloc(tree2->nodesNum, sizeof(Branch*));
+    //    }
+    //}
+
+    TAB[0] = (Branch***)calloc(nodeTypeCount * tree2->nodesNum, sizeof(Branch**));
+    TAB[0][0] = (Branch**)calloc(nodeTypeCount * tree2->nodesNum * tree2->nodesNum,
+        sizeof(Branch*));
+    for (j = 1; j < tree2->nodesNum; ++j){
+        TAB[0][j] = TAB[0][j-1] + tree2->nodesNum;
+    }
+    for (i = 1; i < nodeTypeCount; ++i){
+        TAB[i] = TAB[i-1] + tree2->nodesNum;
+        TAB[i][0] = TAB[i-1][tree2->nodesNum - 1] + tree2->nodesNum;
+        for(j = 1; j < tree2->nodesNum; ++j)
+        {
+            TAB[i][j] = TAB[i][j-1] + tree2->nodesNum;
         }
     }
+
 
     Branch*** rootTable = (Branch***)calloc(sizeof(Branch**), rootNum);
     rootTable[0] = (Branch**)calloc(sizeof(Branch*), tree2->nodesNum * rootNum);
@@ -1382,6 +1398,9 @@ void UMAST(Tree* intree1, Tree* intree2){
     free(rootTable[0]);
     free(rootTable);
     free(brAllocator);
+    free(TAB[0][0]);
+    free(TAB[0]);
+    free(TAB);
 } //UMAST
 
 
