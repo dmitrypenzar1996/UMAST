@@ -1069,6 +1069,7 @@ Branch* UMASTStep(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2,
     Tree* tree1;
     Tree* tree2;
     Branch** aRow;
+    int leavesNum;
 
     tree1 = treeCopy(intree1, 1);
     tree2 = treeCopy(intree2, 1);
@@ -1081,7 +1082,7 @@ Branch* UMASTStep(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2,
 
     caseTable = calloc(tree1->nodesNum, sizeof(int));
 
-    int* nodesNeedToCalculate = calloc(tree1->nodesNum - 1, sizeof(int));
+    int* nodesNeedToCalculate = calloc(tree1->nodesNum, sizeof(int));
 
     for(i = 0; i < tree1->nodesNum - 1; ++i){
         variant = findParent(i, tree1, setPermutation1);
@@ -1237,10 +1238,11 @@ Branch* UMASTStep(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2,
     free(caseTable);
     branchArrayDelete(branchArr1);
     branchArrayDelete(branchArr2);
+    leavesNum = tree1->nodesNum - 1;
     treeDelete(tree1);
     treeDelete(tree2);
 
-    return rootRow[tree1->nodesNum - 1]; // root always should be max
+    return rootRow[leavesNum]; // root always should be max
 } //UMASTStep
 
 
