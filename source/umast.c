@@ -404,6 +404,25 @@ int* calculateLeavesPermutation(Tree* tree1, Tree* tree2)
 } //calculateLeavesPermutation
 
 
+int simpleBranchGetLeavesPosNum(Branch* br){
+    int number;
+    int leavesNum = 0;
+    int i;
+    for(i = 0; i < branchGetIntSize(br); ++i){
+        number = br->branch[i];
+        while (number) {
+            if (number & 1){
+                leavesNum += 1;
+            }
+            number >>= 1;
+        }
+
+    }
+    return leavesNum;
+}
+
+
+
 void branchCalculateLeavesPosNum(Branch* br){
     unsigned i = 0;
     unsigned j = 0;
@@ -428,7 +447,8 @@ void branchCalculateLeavesPosNum(Branch* br){
 int branchGetLeavesPosNum(Branch* br)
 {
     if (br->leavesNum == -1){
-        branchCalculateLeavesPosNum(br);
+        br->leavesNum = simpleBranchGetLeavesPosNum(br);
+        //branchCalculateLeavesPosNum(br);
     }
     return br->leavesNum;
 } //branchGetLeavesPosNum
@@ -1093,7 +1113,6 @@ Branch* UMASTStep(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2,
     }
     caseTable[tree1->nodesNum - 1] = 6;
     nodesNeedToCalculate[tree1->nodesNum-1] = 1;
-
     for (i = 0; i < tree1->nodesNum; i++) //Until all lines in TAB are filled
     {
         a = set1[i];
