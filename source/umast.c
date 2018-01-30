@@ -1108,11 +1108,11 @@ Branch* UMASTStep(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2,
             aRow = rootRow;
         }
 
-        Node* nodeA = tree1->nodes[a];
+        nodeA = tree1->nodes[a];
         for (j = 0; j < tree2->nodesNum; j++) //Until all cells in line are filled
         {
             w = set2[j];
-            Node* nodeW = tree2->nodes[w];
+            nodeW = tree2->nodes[w];
 
             b = -1; c = -1; x = -1; y = -1;
             if ((nodeA->neiNum == 1) || (nodeW->neiNum == 1)) //if a or w is a leaf
@@ -1153,6 +1153,7 @@ Branch* UMASTStep(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2,
             }
             else //nor a nor w are leaves
             {
+                /////// !!!!
                 parentA = findChilds(a, tree1, setPermutation1, &b, &c);
                 parentW = findChilds(w, tree2, setPermutation2, &x, &y);
 
@@ -1280,7 +1281,7 @@ Tree* makeUMASTTree(Branch* br, Tree* tree1)
         fprintf(logfile, "%d%s\n", tree1->leavesNum - commonLeavesNum, " leaves are to be deleted");
         requiredLeavesNames = calloc(commonLeavesNum, sizeof(char*));
         for(i = 0; i < commonLeavesNum; ++i){
-            requiredLeavesNames[i] = tree1->leaves[i]->name;
+            requiredLeavesNames[i] = tree1->leaves[requiredLeavesPoses[i]]->name;
         }
 
         result = treePrune(tree1, requiredLeavesNames, commonLeavesNum, 0);
@@ -1297,7 +1298,7 @@ Tree* makeUMASTTree(Branch* br, Tree* tree1)
 
         return result;
     }
-} //makeMAST
+} //makeUMASTTree
 
 
 void UMAST(Tree* intree1, Tree* intree2){
