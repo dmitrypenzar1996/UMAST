@@ -129,7 +129,7 @@ void branchAndDest(Branch* br1, Branch* br2, Branch* andBranch){
 
     for(i = 0; i < branchGetIntSize(br1); ++i)
     {
-        andBranch->branch[i] = br1->branch[i] & br2->branch[i];
+        andBranch->branch[i] = (br1->branch[i] & br2->branch[i]);
     }
     andBranch->leavesNum = -1;
 }
@@ -192,13 +192,17 @@ size_t* branchGetLeavesPos(Branch* br, size_t* leavesNum, size_t maxNum)
                 positions[curSize++] = k + j +  i * intSize;
             }
             j += k + 1;
-            if (curSize >= maxNum)
-            {
+            if (curSize > maxNum){
                 free(positions);
                 *leavesNum = 0;
                 return NULL;
             }
+
         }
+    }
+    if (!curSize){
+        free(positions);
+        return 0;
     }
     positions = realloc(positions, sizeof(size_t) * curSize);
     *leavesNum = curSize;
