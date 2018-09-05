@@ -18,7 +18,7 @@
 */
 
 #include <stdlib.h>
-#include "add.h"
+#include "utils.h"
 
 #ifndef __BRANCH__H
 #define __BRANCH__H
@@ -78,4 +78,9 @@ int branchCompare(Branch* br1, Branch* br2);
 
 int vBranchCompare(const void* branch1, const void* branch2);
 
+int branchGetLeavesPosNum(Branch* br);
+
+void branchCalculateLeavesPosNum(Branch* br);
+
+unsigned* branchToLeavesArr(Branch* br, unsigned leavesNum);
 #endif

@@ -20,7 +20,7 @@
 #ifndef _UMAST_H_
 #define _UMAST_H_
 #include "Tree.h"
-#include "add.h"
+#include "utils.h"
 #include "Branch.h"
 #include "BranchArray.h"
 #include "BranchAllocator.h"
@@ -32,15 +32,10 @@ const nodeTypeCount = 6;
 BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation);
 Tree* deleteLeaves(Tree* tree, char** leavesToDelete, int leavesToDeleteAmount);
 Tree** treesPrune(Tree* tree1, Tree* tree2);
-Tree* treeRoot(Tree* tree, unsigned nodeID, unsigned neighbourID, char newTree);
-Tree* treeUnRoot(Tree* tree, char newTree);
 unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation);
 int* calculateLeavesPermutation(Tree* tree1, Tree* tree2);
-int branchGetLeavesPosNum(Branch* br);
 void countVariants(Branch*** TAB, int a, int w, int b, int c, int x, int y,
     int* bestValue, int* bestPos);
-int* getTreeLeavesPos(Tree* tree);
-unsigned* branchToLeavesArr(Branch* br, unsigned leavesNum);
 int** getAllRoots(Tree* tree);
 int* getRandMaxBranch(Branch*** TAB, int rows, int cols);
 Tree* makeMAST(Branch* br, Tree* tree1);

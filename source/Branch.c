@@ -430,3 +430,63 @@ int vBranchCompare(const void* branch1, const void* branch2)
 
     return branchCompare(brPtr1, brPtr2);
 }
+
+void branchCalculateLeavesPosNum(Branch* br){
+    unsigned i = 0;
+    unsigned j = 0;
+    unsigned k = 0;
+    int curSize = 0;
+    for(i = 0; i < branchGetIntSize(br); ++i)
+    {
+        j = 0;
+        while(j < intSize)
+        {
+            k = countZeroRightNum((br->branch[i]) >> j);
+            if (k != intSize)
+            {
+                curSize++;
+            }
+            j += k + 1;
+        }
+    }
+    br->leavesNum = curSize;
+}
+
+int branchGetLeavesPosNum(Branch* br)
+{
+    if (br->leavesNum == -1){
+        branchCalculateLeavesPosNum(br);
+    }
+    return br->leavesNum;
+} //branchGetLeavesPosNum
+
+unsigned* branchToLeavesArr(Branch* br, unsigned leavesNum)
+{
+    int i, j;
+    INT curInt;
+    int curPos = 0;
+    unsigned* leavesPosArr;
+    int curSize;
+    leavesPosArr = (unsigned*)calloc(sizeof(unsigned), leavesNum);
+    for (i = 0; i < leavesNum; i++)
+    {
+        leavesPosArr[i] = 0;
+    }
+
+    for (i = 0; i < branchGetIntSize(br); ++i)
+    {
+        curInt = br->branch[i];
+        curSize = leavesNum - (i * intSize);
+        curSize = curSize > intSize ? intSize : curSize;
+        for (j = 0; j < curSize; ++j)
+        {
+            if ((curInt & 1) == 1)
+            {
+                leavesPosArr[curPos] = 1;
+            }
+            ++curPos;
+            curInt >>=1;
+        }
+    }
+    return leavesPosArr;
+} //branchToLeavesArr

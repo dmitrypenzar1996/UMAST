@@ -1772,6 +1772,132 @@ Tree* treePrune(Tree* source, char** leavesNames, size_t leavesNum,
     return result;
 }/* treePrune */
 
+Tree* treeRoot(Tree* tree, unsigned nodeID, unsigned neighbourID, char newTree){
+    int i;
+    Node* root;
+    Node* prevNode;
+    Tree* result;
+
+    if (tree == 0){
+        fprintf(stderr, "Error, null tree pointer, umast:treeRoot\n");
+        exit(1);
+    }
+    if (tree->leavesNum == 0)
+    {
+        fprintf(stderr, "Error, cannot root empty tree, umast:treeRoot\n");
+        exit(1);
+    }
+    if (nodeID >= tree->nodesNum)
+    {
+       fprintf(stderr, "Error, node index is out of range, umast:treeRoot\n");
+        exit(1);
+    }
+    if (neighbourID >= tree->nodes[nodeID]->neiNum)
+    {
+        fprintf(stderr, "Error, neighbour index is out of range, (%d of %d)\
+                umast:treeRoot\n", neighbourID, tree->nodes[nodeID]->neiNum);
+       exit(1);
+    }
+    result = tree;
+    if (newTree)
+    {
+        result = treeCopy(tree, 0);
+    }
+
+    root = nodeCreate();
+    root->pos = result->nodesNum;
+
+    prevNode = result->nodes[nodeID]->neighbours[neighbourID];
+    result->nodes[nodeID]->neighbours[neighbourID] = root;
+
+    for(i = 0; i < prevNode->neiNum; i++)
+    {
+        if (prevNode->neighbours[i] == result->nodes[nodeID])
+        {
+            prevNode->neighbours[i] = root;
+            break;
+        }
+    }
+
+    nodeAddNeighbour(root, result->nodes[nodeID], 0);
+    nodeAddNeighbour(root, prevNode, 0);
+    result->nodesNum += 1;
+    result->nodes = realloc(result->nodes, sizeof(Node*) * (result->nodesNum));
+    result->nodes[result->nodesNum - 1] = root;
+    result->rootId = root->pos;
+    return result;
+} //treeRoot
+
+Tree* treeUnRoot(Tree* tree, char newTree)
+{
+    int i, j, k;
+    Node* curnode;
+    Tree* result;
+
+    if (tree == 0)
+    {
+        fprintf(stderr, "Error, null tree pointer, umast:treeUnRoot\n");
+        exit(1);
+    }
+    if (tree->leavesNum == 0)
+    {
+        fprintf(stderr, "Error, cant root empty tree, umast:treeUnRoot\n");
+        exit(1);
+    }
+
+    result = tree;
+    if (newTree)
+    {
+        result = treeCopy(tree, 0);
+    }
+    if (tree->rootId != (tree->nodesNum - 1))
+    {
+        fprintf(stderr, "Error, root is not the last node, umast:treeUnRoot\n");
+        exit(1);
+    }
+
+    // this can be simplified, for-usage
+    curnode = result->nodes[result->rootId];
+    for (i = 0; i < curnode->neiNum; i++)
+    {
+        for (j = 0; j < curnode->neiNum; j++)
+        {
+            if (i != j)
+            {
+                for (k = 0; k < curnode->neighbours[i]->neiNum; k++)
+                {
+                    if (curnode->neighbours[i]->neighbours[k] == curnode)
+                    {
+                        curnode->neighbours[i]->neighbours[k] = curnode->neighbours[j];
+                    }
+                }
+            }
+        }
+    }
+
+    nodeDelete(curnode);
+    result->rootId = -1;
+    result->nodesNum--;
+    result->nodes =  realloc(result->nodes, sizeof(Node*) * (result->nodesNum));
+    return result;
+} //treeUnRoot
+
+int* treeGetLeavesPos(Tree* tree)
+{
+    int* leavesPosArr;
+    int i, j;
+    leavesPosArr = (int*)calloc(sizeof(int), tree->nodesNum);
+    for (i = 0;  i < tree->nodesNum; i++)
+    {
+        leavesPosArr[i] = -1;
+    }
+    for (i = 0; i < tree->leavesNum; i++)
+    {
+        leavesPosArr[tree->leaves[i]->pos] = i;
+    }
+    return leavesPosArr;
+} //treeGetLeavesPos
+
 
 /* test
 int main()

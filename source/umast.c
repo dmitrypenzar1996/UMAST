@@ -22,8 +22,6 @@
 #include "umast.h"
 #include <time.h>
 
-
-// TODO Here we can avoid using BranchArray
 BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation)
 {
     INT p = 1;
@@ -122,223 +120,30 @@ void stackCycle(Node* node, NodeStack* stack)
     }
 } //stackCycle
 
-
-// TODO this can be optimized by pruning tree, rather then direct removing of each leaf
-Tree* deleteLeaves(Tree* tree, char** leavesToDelete, int leavesToDeleteAmount)
-{
-    int i, j;
-    Tree* result = treeCreate();
-    result->nodes = (Node**)calloc(sizeof(Node*), tree->nodesNum);
-    result->leaves = (Node**)calloc(sizeof(Node*), tree->leavesNum);
-    result = treeCopy(tree, 0);
-    for (i = 0; i < leavesToDeleteAmount; i++)
-    {
-        for (j=0; j < result->leavesNum; j++)
-        {
-            if (strcmp(leavesToDelete[i], result->leaves[j]->name)==0)
-            {
-                result = treeRemoveLeaf(result, j, 0, 0);
-            }
-        }
-    }
-    return result;
-} //deleteLeaves
-
-// TODO rename function, treePrune already exist
-Tree** treesPrune(Tree* tree1, Tree* tree2)
-{
-    int i, j;
-    int count1, count2;
-    char** leavesToSave1;
-    char** leavesToSave2;
-    Tree** result;
-
-    count1 = 0;
-    count2 = 0;
-    result = (Tree**)calloc(sizeof(Tree*), 2);
-    result[0] = treeCreate();
-    result[1] = treeCreate();
-    leavesToSave1 = (char**)calloc(sizeof(char*), tree1->leavesNum);
-    leavesToSave2 = (char**)calloc(sizeof(char*), tree2->leavesNum);
-
-    for (i = 0; i < tree1->leavesNum; i++)
-    {
-        for (j = 0; j < tree2->leavesNum; j++)
-        {
-            if (strcmp(tree1->leaves[i]->name, tree2->leaves[j]->name) == 0)
-            {
-                leavesToSave1[count1] = tree1->leaves[i]->name;
-                count1++;
+char** findCommonNamesSet(char** names1, size_t l1, char** names2, size_t l2, size_t* common_size){
+    int i = 0;
+    int j = 0;
+    int mx = l1 > l2 ? l1 : l2;
+    char** common_set = malloc(sizeof(char**) * mx);
+    size_t cm_set_size = 0;
+    for (i = 0; i < l1; ++i){
+        for(j = 0; j < l2; ++j){
+            if (strcmp(names1[i], names2[j]) == 0){
+                common_set[cm_set_size++] = names1[i];
                 break;
             }
         }
     }
-    for (i = 0; i < tree2->leavesNum; i++)
-    {
-        for (j = 0; j < tree1->leavesNum; j++)
-        {
-            if (strcmp(tree2->leaves[i]->name, tree1->leaves[j]->name) == 0)
-            {
-                leavesToSave2[count2] = tree2->leaves[i]->name;
-                count2++;
-                break;
-            }
-        }
+    if (cm_set_size != 0){
+        common_set = realloc(common_set, sizeof(char**) * cm_set_size);
+    }else{
+        free(common_set);
+        common_set = NULL;
     }
 
-    if (count1 > tree1->leavesNum)
-    {
-        fprintf(stderr, "Error, wrong count 1, umast:treesPrune\n");
-        exit(1);
-    }
-
-    if (count2 > tree2->leavesNum)
-    {
-        fprintf(stderr, "Error, wrong count 2, umast:treesPrune\n");
-        exit(1);
-    }
-
-    if ((count1 == 0) || (count2 == 0))
-    {
-        fprintf(stderr, "Error, trees do not have equal leaves, umast:treesPrune\n");
-        exit(1);
-    }
-
-    if (count1 == tree1->leavesNum)
-    {
-        result[0] = treeCopy(tree1, 0);
-    }
-    else
-    {
-        leavesToSave1 = realloc(leavesToSave1, (sizeof(char*) * (count1)));
-        result[0] = treePrune(tree1, leavesToSave1, (size_t) count1, 0);
-    }
-
-     if (count2 == tree2->leavesNum)
-    {
-        result[1] = treeCopy(tree2, 0);
-    }
-    else
-    {
-        leavesToSave2 = realloc(leavesToSave2, (sizeof(char*) * (count2)));
-        result[1] = treePrune(tree2, leavesToSave2, (size_t) count2, 0);
-    }
-
-    free(leavesToSave1);
-    free(leavesToSave2);
-    return result;
-} //treesPrune
-
-Tree* treeRoot(Tree* tree, unsigned nodeID, unsigned neighbourID, char newTree){
-    int i;
-    Node* root;
-    Node* prevNode;
-    Tree* result;
-
-    if (tree == 0){
-        fprintf(stderr, "Error, null tree pointer, umast:treeRoot\n");
-        exit(1);
-    }
-    if (tree->leavesNum == 0)
-    {
-        fprintf(stderr, "Error, cannot root empty tree, umast:treeRoot\n");
-        exit(1);
-    }
-    if (nodeID >= tree->nodesNum)
-    {
-       fprintf(stderr, "Error, node index is out of range, umast:treeRoot\n");
-        exit(1);
-    }
-    if (neighbourID >= tree->nodes[nodeID]->neiNum)
-    {
-        fprintf(stderr, "Error, neighbour index is out of range, (%d of %d)\
-                umast:treeRoot\n", neighbourID, tree->nodes[nodeID]->neiNum);
-       exit(1);
-    }
-    result = tree;
-    if (newTree)
-    {
-        result = treeCopy(tree, 0);
-    }
-
-    root = nodeCreate();
-    root->pos = result->nodesNum;
-
-    prevNode = result->nodes[nodeID]->neighbours[neighbourID];
-    result->nodes[nodeID]->neighbours[neighbourID] = root;
-
-    for(i = 0; i < prevNode->neiNum; i++)
-    {
-        if (prevNode->neighbours[i] == result->nodes[nodeID])
-        {
-            prevNode->neighbours[i] = root;
-            break;
-        }
-    }
-
-    nodeAddNeighbour(root, result->nodes[nodeID], 0);
-    nodeAddNeighbour(root, prevNode, 0);
-    result->nodesNum += 1;
-    result->nodes = realloc(result->nodes, sizeof(Node*) * (result->nodesNum));
-    result->nodes[result->nodesNum - 1] = root;
-    result->rootId = root->pos;
-    return result;
-} //treeRoot
-
-Tree* treeUnRoot(Tree* tree, char newTree)
-{
-    int i, j, k;
-    Node* curnode;
-    Tree* result;
-
-    if (tree == 0)
-    {
-        fprintf(stderr, "Error, null tree pointer, umast:treeUnRoot\n");
-        exit(1);
-    }
-    if (tree->leavesNum == 0)
-    {
-        fprintf(stderr, "Error, cant root empty tree, umast:treeUnRoot\n");
-        exit(1);
-    }
-
-    result = tree;
-    if (newTree)
-    {
-        result = treeCopy(tree, 0);
-    }
-    if (tree->rootId != (tree->nodesNum - 1))
-    {
-        fprintf(stderr, "Error, root is not the last node, umast:treeUnRoot\n");
-        exit(1);
-    }
-
-    // this can be simplified, for-usage
-    curnode = result->nodes[result->rootId];
-    for (i = 0; i < curnode->neiNum; i++)
-    {
-        for (j = 0; j < curnode->neiNum; j++)
-        {
-            if (i != j)
-            {
-                for (k = 0; k < curnode->neighbours[i]->neiNum; k++)
-                {
-                    if (curnode->neighbours[i]->neighbours[k] == curnode)
-                    {
-                        curnode->neighbours[i]->neighbours[k] = curnode->neighbours[j];
-                    }
-                }
-            }
-        }
-    }
-
-    nodeDelete(curnode);
-    result->rootId = -1;
-    result->nodesNum--;
-    result->nodes =  realloc(result->nodes, sizeof(Node*) * (result->nodesNum));
-    return result;
-} //treeUnRoot
-
+    *common_size = cm_set_size;
+    return common_set;
+}//findCommonNamesSet
 
 unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation)
 {
@@ -376,111 +181,21 @@ unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, 
     return result;
 } //treeRootAndTopSort
 
-
 int* calculateLeavesPermutation(Tree* tree1, Tree* tree2)
 {
     int i;
     char** leaves1;
     char** leaves2;
     int* permutation;
-    //leaves1 = (char**)malloc(sizeof(char*) * tree1->leavesNum);
-    //leaves2 = (char**)malloc(sizeof(char*) * tree2->leavesNum);
 
     leaves1 = treeGetNames(tree1);
     leaves2 = treeGetNames(tree2);
-    //for (i = 0; i < tree1->leavesNum; i++)
-    //{
-    //    leaves1[i] = tree1->leaves[i]->name;
-    //}
-    //for (i = 0; i < tree2->leavesNum; i++)
-    //{
-    //    leaves2[i] = tree2->leaves[i]->name;
-    //}
 
     permutation = calculatePermutation(leaves1, leaves2, tree1->leavesNum);
     free(leaves1);
     free(leaves2);
     return permutation;
 } //calculateLeavesPermutation
-
-void branchCalculateLeavesPosNum(Branch* br){
-    unsigned i = 0;
-    unsigned j = 0;
-    unsigned k = 0;
-    int curSize = 0;
-    for(i = 0; i < branchGetIntSize(br); ++i)
-    {
-        j = 0;
-        while(j < intSize)
-        {
-            k = countZeroRightNum((br->branch[i]) >> j);
-            if (k != intSize)
-            {
-                curSize++;
-            }
-            j += k + 1;
-        }
-    }
-    br->leavesNum = curSize;
-}
-
-int branchGetLeavesPosNum(Branch* br)
-{
-    if (br->leavesNum == -1){
-        branchCalculateLeavesPosNum(br);
-    }
-    return br->leavesNum;
-} //branchGetLeavesPosNum
-
-
-
-
-int* getTreeLeavesPos(Tree* tree)
-{
-    int* leavesPosArr;
-    int i, j;
-    leavesPosArr = (int*)calloc(sizeof(int), tree->nodesNum);
-    for (i = 0;  i < tree->nodesNum; i++)
-    {
-        leavesPosArr[i] = -1;
-    }
-    for (i = 0; i < tree->leavesNum; i++)
-    {
-        leavesPosArr[tree->leaves[i]->pos] = i;
-    }
-    return leavesPosArr;
-} //getTreeLeavesPos
-
-unsigned* branchToLeavesArr(Branch* br, unsigned leavesNum)
-{
-    int i, j;
-    INT curInt;
-    int curPos = 0;
-    unsigned* leavesPosArr;
-    int curSize;
-    leavesPosArr = (unsigned*)calloc(sizeof(unsigned), leavesNum);
-    for (i = 0; i < leavesNum; i++)
-    {
-        leavesPosArr[i] = 0;
-    }
-
-    for (i = 0; i < branchGetIntSize(br); ++i)
-    {
-        curInt = br->branch[i];
-        curSize = leavesNum - (i * intSize);
-        curSize = curSize > intSize ? intSize : curSize;
-        for (j = 0; j < curSize; ++j)
-        {
-            if ((curInt & 1) == 1)
-            {
-                leavesPosArr[curPos] = 1;
-            }
-            ++curPos;
-            curInt >>=1;
-        }
-    }
-    return leavesPosArr;
-} //branchToLeavesArr
 
 int** getAllRoots(Tree* tree)
 {
@@ -897,8 +612,8 @@ Branch* MAST(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2, unsig
     branchArr1 = treeRootedToBranchArray(tree1, getRange(0, tree1->leavesNum));
     branchArr2 = treeRootedToBranchArray(tree2, permutation);
 
-    leavesPosArr1 = getTreeLeavesPos(tree1);
-    leavesPosArr2 = getTreeLeavesPos(tree2);
+    leavesPosArr1 = treeGetLeavesPos(tree1);
+    leavesPosArr2 = treeGetLeavesPos(tree2);
     TAB = (Branch***)calloc(sizeof(Branch**), tree1->nodesNum);
     for(i = 0; i < tree1->nodesNum; i++){
         TAB[i] = (Branch**)calloc(sizeof(Branch*), tree2->nodesNum);
@@ -998,6 +713,7 @@ Branch* MAST(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2, unsig
         }
     }
 
+    //TODO remove this as max branch is in predefined place
     randMax = getRandMaxBranch(TAB, tree1->nodesNum, tree2->nodesNum);
     intersection = branchCopy(TAB[randMax[0]][randMax[1]]);
 
@@ -1073,8 +789,8 @@ Branch* UMASTStep(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2,
     permutation = calculateLeavesPermutation(tree2, tree1);
     branchArr1 = treeRootedToBranchArray(tree1, getRange(0, tree1->leavesNum));
     branchArr2 = treeRootedToBranchArray(tree2, permutation);
-    leavesPosArr1 = getTreeLeavesPos(tree1);
-    leavesPosArr2 = getTreeLeavesPos(tree2);
+    leavesPosArr1 = treeGetLeavesPos(tree1);
+    leavesPosArr2 = treeGetLeavesPos(tree2);
 
     caseTable = calloc(tree1->nodesNum, sizeof(int));
 
@@ -1315,14 +1031,36 @@ void UMAST(Tree* intree1, Tree* intree2){
     Branch* bestBranch;
     int bestLeavesNum;
     Branch* curBranch;
+    char** common_leaves;
+    char** names1;
+    char** names2;
     int curLeavesNum;
+    size_t cm_size;
     BranchAllocator* brAllocator;
 
     tree1 = (Tree*)malloc(sizeof(Tree));
     tree2 = (Tree*)malloc(sizeof(Tree));
-    prunedTrees = treesPrune(intree1, intree2);
-    tree1 = prunedTrees[0];
-    tree2 = prunedTrees[1];
+
+
+    // prune Trees
+    names1 = treeGetNames(intree1);
+    names2 = treeGetNames(intree2);
+
+    cm_size = 0;
+    common_leaves = findCommonNamesSet(names1,
+        intree1->leavesNum,
+        names2,
+        intree2->leavesNum,
+        &cm_size);
+    free(names1);
+    free(names2);
+
+    tree1 = treePrune(intree1, common_leaves, cm_size, 0);
+    tree2 = treePrune(intree2, common_leaves, cm_size, 0);
+    free(common_leaves);
+    //
+
+
     rootNum = tree1->nodesNum - 1;
     brAllocator = branchAllocatorCreate(intree1->nodesNum * intree1->nodesNum * rootNum,\
          intree1->leavesNum);
@@ -1366,9 +1104,6 @@ void UMAST(Tree* intree1, Tree* intree2){
         free(sortedSet1);
     }
 
-
-
-
     bestBranch = umastSet[0];
     bestLeavesNum = branchGetLeavesPosNum(bestBranch);
     for(i = 1; i < rootNum; ++i){
@@ -1390,11 +1125,6 @@ void UMAST(Tree* intree1, Tree* intree2){
     free(sortedSet2);
     free(setPermutation1);
     free(setPermutation2);
-    for (i = 0; i < 2; i++)
-    {
-        treeDelete(prunedTrees[i]);
-    }
-    free(prunedTrees);
     free(umastSet);
     free(rootTable[0]);
     free(rootTable);

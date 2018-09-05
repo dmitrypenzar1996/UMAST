@@ -14,8 +14,8 @@ $(SOURCE_DIR) :
 $(LINK_DIR) :
 	if ! [ -d $(LINK_DIR) ]; then mkdir $(LINK_DIR); fi
 
-add.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/add.c
-	gcc -O2 -c $(SOURCE_DIR)/add.c -o $(LINK_DIR)/add.o
+utils.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/utils.c
+	gcc -O2 -c $(SOURCE_DIR)/utils.c -o $(LINK_DIR)/utils.o
 
 Tree.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/Tree.c
 	gcc -O2 -g -c $(SOURCE_DIR)/Tree.c -o $(LINK_DIR)/Tree.o
@@ -35,8 +35,8 @@ BranchAllocator.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/BranchAllocator.c
 umast.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/umast.c
 	gcc -O2 -c $(SOURCE_DIR)/umast.c -o $(LINK_DIR)/umast.o 
 
-umast : umast.o add.o Tree.o RMQ.o Branch.o BranchArray.o BranchAllocator.o
-	gcc $(LINK_DIR)/umast.o $(LINK_DIR)/add.o\
+umast : umast.o utils.o Tree.o RMQ.o Branch.o BranchArray.o BranchAllocator.o
+	gcc $(LINK_DIR)/umast.o $(LINK_DIR)/utils.o\
 	    $(LINK_DIR)/Tree.o $(LINK_DIR)/RMQ.o\
 	    $(LINK_DIR)/Branch.o $(LINK_DIR)/BranchArray.o\
             $(LINK_DIR)/BranchAllocator.o  -lm -o umast.exe
