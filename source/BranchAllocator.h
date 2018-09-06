@@ -23,13 +23,13 @@
 #include "Branch.h"
 #include "stdlib.h"
 
-typedef struct{
+typedef struct {
     char* store;
     unsigned length;
     unsigned capacity;
     unsigned treeLeavesNum;
     unsigned branchFullSize;
-}BranchAllocator;
+} BranchAllocator;
 
 BranchAllocator* branchAllocatorCreate(unsigned capacity, unsigned treeLeavesNum);
 

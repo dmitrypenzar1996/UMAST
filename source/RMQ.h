@@ -30,13 +30,12 @@ typedef struct
     unsigned** table;
     unsigned length;
     unsigned height;
-}SparseTable;
+} SparseTable;
 
 void sparseTableDelete(SparseTable* sparseTable);
 
 SparseTable* sparseTableCalculate(unsigned* segment, unsigned length);
 
 unsigned sparseTableRMQ(SparseTable* sparseTable, unsigned i, unsigned j);
-
 
 #endif

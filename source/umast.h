@@ -19,11 +19,11 @@
 
 #ifndef _UMAST_H_
 #define _UMAST_H_
+#include "Branch.h"
+#include "BranchAllocator.h"
+#include "BranchArray.h"
 #include "Tree.h"
 #include "utils.h"
-#include "Branch.h"
-#include "BranchArray.h"
-#include "BranchAllocator.h"
 #include <stdlib.h>
 #include <string.h>
 

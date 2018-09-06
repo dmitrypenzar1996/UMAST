@@ -20,9 +20,9 @@
 #ifndef __ADD__H
 #define __ADD__H
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h> 
 #include <string.h>
 #include <time.h>
 #define TRUE 1
@@ -56,7 +56,7 @@ int* calculatePermutation(char** leaves, char** seqNames, int size);
 char* seqShuffle(char* seq);
 
 void raiseError(const char* message, const char* fileName, const char* funcName,
-        int lineNum);
+    int lineNum);
 
 size_t* getPermutationPart(size_t arraySize, size_t partSize);
 #endif

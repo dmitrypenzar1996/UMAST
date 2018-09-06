@@ -17,8 +17,8 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdlib.h>
 #include "utils.h"
+#include <stdlib.h>
 
 #ifndef __BRANCH__H
 #define __BRANCH__H
@@ -28,7 +28,7 @@ typedef struct
     unsigned size;
     int leavesNum; // -1 for uncalculated
     INT* branch;
-}Branch;
+} Branch;
 
 static const char intSize = sizeof(INT) * 8;
 

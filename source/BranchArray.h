@@ -27,7 +27,7 @@ typedef struct
     Branch** array;
     unsigned size;
     unsigned maxSize;
-}BranchArray;
+} BranchArray;
 
 BranchArray* branchArrayCreate(unsigned startSize);
 void branchArrayDelete(BranchArray* ba);

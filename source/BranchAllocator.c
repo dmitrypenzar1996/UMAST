@@ -20,12 +20,11 @@
 #include "BranchAllocator.h"
 #include <assert.h>
 
-
-size_t getBranchFullSize(unsigned treeLeavesNum){
+size_t getBranchFullSize(unsigned treeLeavesNum) {
     return sizeof(Branch) + sizeof(INT) * getBitMaskIntSize(treeLeavesNum);
 }
 
-BranchAllocator* branchAllocatorCreate(unsigned capacity, unsigned treeLeavesNum){
+BranchAllocator* branchAllocatorCreate(unsigned capacity, unsigned treeLeavesNum) {
     size_t branchFullSize = getBranchFullSize(treeLeavesNum);
     BranchAllocator* allocator = malloc(sizeof(BranchAllocator));
     allocator->length = 0;
@@ -36,20 +35,20 @@ BranchAllocator* branchAllocatorCreate(unsigned capacity, unsigned treeLeavesNum
     return allocator;
 }
 
-void branchAllocatorDelete(BranchAllocator* allocator){
+void branchAllocatorDelete(BranchAllocator* allocator) {
     free(allocator->store);
     free(allocator);
 }
 
-Branch* branchAllocatorGetBranch(BranchAllocator* allocator){
-    if (allocator->length == allocator->capacity){
+Branch* branchAllocatorGetBranch(BranchAllocator* allocator) {
+    if (allocator->length == allocator->capacity) {
         perror("Memory limit for branch allocator");
         exit(1);
     }
 
     Branch* br = (Branch*)(allocator->store + allocator->length * (allocator->branchFullSize));
     ++allocator->length;
-    br->branch = (INT*)( (char*)br + sizeof(Branch));
+    br->branch = (INT*)((char*)br + sizeof(Branch));
     br->leavesNum = 0;
     br->size = allocator->treeLeavesNum;
     return br;
