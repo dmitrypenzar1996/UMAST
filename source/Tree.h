@@ -21,16 +21,23 @@
 #define _TREE_H_
 #include "RMQ.h"
 #include "utils.h"
+#include "BranchArray.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 
 typedef enum {
     WHITE,
     GREY,
     BLACK
 } Color;
+
+typedef enum {
+    AddOnVisit,
+    AddOnExit
+} NodeAddType;
 
 typedef struct Node {
     char* name; // null if internal
@@ -80,7 +87,7 @@ void treeDelete(Tree* tree);
 double readLength(char* string, unsigned* pos);
 char* readName(char* string, unsigned* pos);
 Tree* treeCopy(Tree* source, char copyLCAFinder);
-Tree* treeFromNewick(char* newick);
+Tree* treeFromNewick(char* newick, char rooted);
 char* treeToString(Tree* tree);
 void treeWash(Tree* tree);
 Tree* treeAddLeaf(Tree* tree, unsigned nodeID, unsigned neighbourID, char* leafName,
@@ -89,7 +96,7 @@ Tree* treeRemoveLeaf(Tree* tree, unsigned leafPos, char newTree, char calcLCAFin
 
 unsigned treeWhichSplit(Tree* tree, unsigned leaf1, unsigned leaf2, unsigned leaf3, unsigned leaf4);
 void treeWrite(Tree* tree, char* outFileName);
-Tree* treeRead(char* inFileName);
+Tree* treeRead(char* inFileName, char rooted);
 
 void treeLCAFinderCalculate(Tree* tree);
 LCAFinder* lcaFinderCreate(void);
@@ -114,4 +121,7 @@ Tree* treePrune(Tree* source, char** leavesNames, size_t leavesNum,
 Tree* treeRoot(Tree* tree, unsigned nodeID, unsigned neighbourID, char newTree);
 Tree* treeUnRoot(Tree* tree, char newTree);
 int* treeGetLeavesPos(Tree* tree);
+BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation);
+unsigned* treeDFS(Tree* tree, unsigned startNodePos, NodeAddType addtype);
+unsigned* treeTopologicalSort(Tree* tree);
 #endif

@@ -1,4 +1,4 @@
-/*  Copyright 2016, 2017 Andrew Sigorskih, Dmitry Penzar, Sergei Spirin 
+/*  Copyright 2016, 2017 Andrew Sigorskih, Dmitry Penzar, Sergei Spirin
 
     This file is part of UMAST, taken from our another program PQ.
 
@@ -13,7 +13,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with UMAST (a file named "COPYING.txt"). 
+    along with UMAST (a file named "COPYING.txt").
     If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -59,4 +59,6 @@ void raiseError(const char* message, const char* fileName, const char* funcName,
     int lineNum);
 
 size_t* getPermutationPart(size_t arraySize, size_t partSize);
+
+unsigned* calcUnsignedPermutation(unsigned* set, size_t size);
 #endif

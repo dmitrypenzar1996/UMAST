@@ -213,6 +213,17 @@ size_t* getPermutationRep(size_t arraySize)
     return perm;
 } /*calculatePermutationRep*/
 
+unsigned* calcUnsignedPermutation(unsigned* set, size_t size){
+    unsigned* permutation = malloc(sizeof(unsigned) * size);
+    int i;
+
+
+    for (i = 0; i < size; ++i){
+        permutation[set[i]] = i;
+    }
+    return permutation;
+}
+
 void raiseError(const char* message, const char* fileName, const char* funcName,
     int lineNum) {
     fprintf(stderr, "Error: %s, File: %s, Function: %s, line: %d\n",

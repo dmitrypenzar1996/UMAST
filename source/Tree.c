@@ -202,7 +202,7 @@ char* readName(char* string, unsigned* pos) {
     return name;
 } /* readName */
 
-Tree* treeFromNewick(char* newick) {
+Tree* treeFromNewick(char* newick, char rooted){
     Tree* tree;
     NodeStack* stack;
     unsigned nodesNum;
@@ -284,25 +284,12 @@ Tree* treeFromNewick(char* newick) {
 
     nodeStackDelete(stack);
 
-    //if (nodes[0]->neiNum < 2)
-    // {
-    //      fprintf(stderr, "Error, tree must contain at least two leaves,\
-  //              Tree:treeFromNewick\n");
-    //      exit(1);
-    //  }
-    //
-
-    //if (nodesNum != (leavesNum * 2 - 2) && nodesNum != (leavesNum * 2 - 1))
-    //{
-    //     fprintf(stderr, "Error, wrong newick format, Tree:treeFromNewick\n");
-    //     exit(1);
-    // }
-
     Node* nei1 = NULL;
     Node* nei2 = NULL;
     leaves = realloc(leaves, sizeof(Node*) * leavesNum);
     if (nodes[0]->neiNum == 2) //tree was rooted
     {
+        if (!rooted){
         fuse = nodes[0];
         nei1 = fuse->neighbours[0];
         nei2 = fuse->neighbours[1];
@@ -327,6 +314,9 @@ Tree* treeFromNewick(char* newick) {
         --nodesNum;
         memmove(nodes, nodes + 1, sizeof(Node*) * nodesNum);
         nodeDelete(fuse);
+        }else{//(rooted)
+          tree->rootId = 0;
+        }
     }
 
     for (i = 0; i < nodesNum; ++i) {
@@ -414,7 +404,7 @@ char* treeToString(Tree* tree) {
     }
     treeWash(tree);
 
-    string = (char*)calloc(sizeof(char*), stringMaxSize + 1);
+    string = (char*)calloc(sizeof(char), stringMaxSize + 1);
 
     stack = nodeStackCreate(tree->nodesNum);
     curNode = tree->nodes[0];
@@ -831,7 +821,7 @@ void treeWrite(Tree* tree, char* outFileName) {
     return;
 } /* treeWrite */
 
-Tree* treeRead(char* inFileName) {
+Tree* treeRead(char* inFileName, char rooted) {
     int strTreeSize = 100;
     FILE* inFile = NULL;
     char* line = NULL;
@@ -857,7 +847,7 @@ Tree* treeRead(char* inFileName) {
         free(line);
     }
 
-    result = treeFromNewick(strNewickTree);
+    result = treeFromNewick(strNewickTree, rooted);
     free(strNewickTree);
     fclose(inFile);
     return result;
@@ -1520,7 +1510,9 @@ Tree* treeRoot(Tree* tree, unsigned nodeID, unsigned neighbourID, char newTree) 
 
 Tree* treeUnRoot(Tree* tree, char newTree) {
     int i, j, k;
-    Node* curnode;
+    Node* root;
+    Node* nei1;
+    Node* nei2;
     Tree* result;
 
     if (tree == 0) {
@@ -1542,20 +1534,23 @@ Tree* treeUnRoot(Tree* tree, char newTree) {
     }
 
     // this can be simplified, for-usage
-    curnode = result->nodes[result->rootId];
-    for (i = 0; i < curnode->neiNum; i++) {
-        for (j = 0; j < curnode->neiNum; j++) {
+    root = result->nodes[result->rootId];
+    for (i = 0; i < root->neiNum; i++) {
+        nei1 = root->neighbours[i];
+        for (j = 0; j < root->neiNum; j++) {
+            nei2 = root->neighbours[j];
             if (i != j) {
-                for (k = 0; k < curnode->neighbours[i]->neiNum; k++) {
-                    if (curnode->neighbours[i]->neighbours[k] == curnode) {
-                        curnode->neighbours[i]->neighbours[k] = curnode->neighbours[j];
+                for (k = 0; k < nei1->neiNum; k++) {
+                    if (nei1->neighbours[k] == root){
+                        break;
                     }
                 }
+                nei1->neighbours[k] = nei2;
             }
         }
     }
 
-    nodeDelete(curnode);
+    nodeDelete(root);
     result->rootId = -1;
     result->nodesNum--;
     result->nodes = realloc(result->nodes, sizeof(Node*) * (result->nodesNum));
@@ -1575,111 +1570,108 @@ int* treeGetLeavesPos(Tree* tree) {
     return leavesPosArr;
 } //treeGetLeavesPos
 
-/* test
-int main()
-{
-    int i = 0, j = 0, k = 0;
-    unsigned neiPos = 0;
-    unsigned revertNodeID = 0;
-    unsigned revertNeiID = 0;
-    //char* newick = "((rec, (rec1, rec2)), ((dim, aunt) ,(aim,(bimmm, uiuu))));";
-    char* newick = "(rec, (aunt,(aim,(bimmm, uiuu))));";
+unsigned* treeDFS(Tree* tree, unsigned startNodePos, NodeAddType addtype) {
+    unsigned* treeAddOrder = malloc(sizeof(unsigned) * tree->nodesNum);
+    int curSize = 0;
+    int i = 0;
+    Node* curNode = tree->nodes[startNodePos];
+    Node* nextNode = NULL;
+    NodeStack* stack = nodeStackCreate(tree->nodesNum);
 
-    Tree* tree = treeFromNewick(newick);
-    printf("inPos\n");
-    for(i = 0; i < tree->nodesNum; ++i)
-    {
-        printf("%d ", tree->lcaFinder->inPos[i]);
-    }
-    printf("\n");
-    printf("Vertices\n");
-    for(i = 0; i < tree->lcaFinder->sparceTable->length; ++i)
-    {
-        printf("%d ", tree->lcaFinder->vertices[i]);
-    }
-    printf("\n");
-    printf("Deeps\n");
-    for(i = 0; i < tree->lcaFinder->sparceTable->length; ++i)
-    {
-        printf("%d ", tree->lcaFinder->deep[i]);
-    }
-    printf("\n");
-    printf("Sparse Table\n");
-    int length = tree->lcaFinder->sparceTable->length;
-    for(i = 0; i < tree->lcaFinder->sparceTable->height; ++i)
-    {
-        for(j = 0; j < length; ++j)
-        {
-            printf("%d ", tree->lcaFinder->sparceTable->table[i][j]);
+    treeWash(tree);
+    nodeStackPush(stack, curNode);
+    curNode->color = BLACK;
+
+    while (stack->curSize != 0) {
+        curNode = nodeStackPeek(stack);
+        if (addtype == AddOnVisit) {
+            treeAddOrder[curSize++] = curNode->pos;
         }
-        printf("\n");
-        length -= (1 << i);
+        nextNode = curNode;
+        for (i = 0; i < curNode->neiNum; ++i) {
+            nextNode = curNode->neighbours[i];
+            if (nextNode->color == WHITE) {
+                break;
+            }
+        }
+
+        if (nextNode->color == WHITE) {
+            nodeStackPush(stack, nextNode);
+            nextNode->color = BLACK;
+        } else {
+            nodeStackPop(stack);
+
+            if (addtype == AddOnExit) {
+                treeAddOrder[curSize++] = curNode->pos;
+            }
+        }
+    }
+    nodeStackDelete(stack);
+    return treeAddOrder;
+}
+
+unsigned* treeTopologicalSort(Tree* tree) {
+    if (tree->rootId == -1) {
+        fprintf(stderr, "Topologocal sort can't be applied to unrooted tree\n");
     }
 
-    printf("LCA is %u\n", treeFindLCADeep(tree, 2, 4));
-    printf("Split is %u\n", treeWhichSplit(tree, 2, 4, 1, 3));
-    printf("%u\n", tree->leavesNum);
-    printf("%s\n", tree->leaves[4]->name);
-    Tree* newTree = treeCopy(tree, 0);
-    printf("%u\n", newTree->leavesNum);
-    printf("%s\n", newTree->leaves[4]->name);
-    char* newickNew = treeToString(tree);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    newickNew = treeToString(newTree);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    Tree* newTreeAdd = treeAddLeaf(tree, 1, 1, "urrr", 1, 0);
-    Tree* newTreeRem = treeRemoveLeaf(tree, 3, 0, 0);
-    newTreeRem = treeRemoveLeaf(newTreeRem, 0, 0, 0);
-    newTreeRem = treeRemoveLeaf(newTreeRem, 0, 0, 0);
-    newickNew = treeToString(newTreeRem);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    newTreeRem = treeRemoveLeaf(newTreeRem, 0, 0, 0);
-    newTreeRem = treeRemoveLeaf(newTreeRem, 0, 0, 0);
-    newickNew = treeToString(newTreeAdd);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    newickNew = treeToString(newTreeRem);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    newickNew = treeToString(newTree);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    Tree* new2Tree = treeSPRMove(newTree, 0, neiPos, 3, 2, &revertNodeID,\
-            &revertNeiID, 0, 0);
-    newickNew = treeToString(new2Tree);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    new2Tree = treeSPRMove(newTree, 0, neiPos, revertNodeID, revertNeiID,\
-            &revertNodeID, &revertNeiID, 0, 0);
-    newickNew = treeToString(new2Tree);
-    printf("%s\n", newickNew);
-    free(newickNew);
-    unsigned newBranch1NodeID = 0;
-    unsigned newBranch1NeiPos = 0;
-    unsigned newBracnh2NodeID = 0;
-    unsigned newBracnh2NeiPos = 0;
-    new2Tree = treeTBRMove(newTree, 1, 2, 0, 0, 5, 0,\
-            &newBranch1NodeID, &newBranch1NeiPos,\
-            &newBracnh2NodeID, &newBracnh2NeiPos,
-            0, 0);
-    newickNew = treeToString(new2Tree);
-    printf("TBR %s\n", newickNew);
-    free(newickNew);
-    printf("%d %d %d %d\n",\
-        newBranch1NodeID, newBranch1NeiPos,
-        newBracnh2NodeID, newBracnh2NeiPos);
-    new2Tree = treeTBRMove(newTree, 1, 2, \
-            newBranch1NodeID, newBranch1NeiPos,
-            newBracnh2NodeID, newBracnh2NeiPos,\
-            0, 0, 0, 0, 0, 0);
-    newickNew = treeToString(new2Tree);
-    printf("TBR %s\n", newickNew);
-    free(newickNew);
-    treeDelete(tree);
-    treeDelete(newTree);
-    return 0;
+    return treeDFS(tree, tree->rootId, AddOnExit);
 }
-*/
+
+BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation) {
+    INT p = 1;
+    int i = 0;
+    int j = 0;
+    unsigned branchNum = tree->nodesNum;
+    BranchArray* ba = branchArrayCreate(branchNum);
+    NodeStack* stack = nodeStackCreate(tree->nodesNum);
+    Node* curNode = 0;
+    Node* nextNode = 0;
+    if (tree->leavesNum == 0) {
+        fprintf(stderr, "Error, tree has no leaves, umast:treeRootedToBranchArray\n");
+        exit(1);
+    }
+    if (tree == 0) {
+        fprintf(stderr, "Error, null Tree pointer, umast:treeRootedToBranchArray\n");
+        exit(1);
+    }
+    treeWash(tree);
+    for (i = 0; i < branchNum; ++i) {
+        branchArrayAdd(ba, branchCreate(tree->leavesNum));
+    }
+
+    for (i = 0; i < tree->leavesNum; ++i) {
+        p = 1;
+        p = p << (permutation[i] & (intSize - 1));
+        ba->array[tree->leaves[i]->pos]->branch[permutation[i] / intSize] |= p;
+        tree->leaves[i]->color = BLACK;
+    }
+    curNode = tree->nodes[tree->rootId];
+    nodeStackPush(stack, curNode);
+    curNode->color = GREY;
+
+    while (stack->curSize != 0) {
+        curNode = nodeStackPeek(stack);
+        nextNode = 0;
+        for (i = 0; i < curNode->neiNum; ++i) {
+            if (curNode->neighbours[i]->color == WHITE) {
+                nextNode = curNode->neighbours[i];
+                break;
+            }
+        }
+        if (nextNode) {
+            nodeStackPush(stack, nextNode);
+            nextNode->color = GREY;
+        } else {
+            for (i = 0; i < curNode->neiNum; ++i) {
+                for (j = 0; j < branchGetIntSize(ba->array[curNode->pos]); ++j) {
+                    ba->array[curNode->pos]->branch[j] |= ba->array[curNode->neighbours[i]->pos]->branch[j];
+                }
+            }
+            nodeStackPop(stack);
+            curNode->color = BLACK;
+        }
+    }
+    nodeStackDelete(stack);
+    return ba;
+} //treeRootedToBranchArray

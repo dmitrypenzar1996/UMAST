@@ -22,137 +22,6 @@
 #include "umast.h"
 #include <time.h>
 
-BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation) {
-    INT p = 1;
-    int i = 0;
-    int j = 0;
-    unsigned branchNum = tree->nodesNum;
-    BranchArray* ba = branchArrayCreate(branchNum);
-    NodeStack* stack = nodeStackCreate(tree->nodesNum);
-    Node* curNode = 0;
-    Node* nextNode = 0;
-    if (tree->leavesNum == 0) {
-        fprintf(stderr, "Error, tree has no leaves, umast:treeRootedToBranchArray\n");
-        exit(1);
-    }
-    if (tree == 0) {
-        fprintf(stderr, "Error, null Tree pointer, umast:treeRootedToBranchArray\n");
-        exit(1);
-    }
-    treeWash(tree);
-    for (i = 0; i < branchNum; ++i) {
-        branchArrayAdd(ba, branchCreate(tree->leavesNum));
-    }
-
-    for (i = 0; i < tree->leavesNum; ++i) {
-        p = 1;
-        p = p << (permutation[i] & (intSize - 1));
-        ba->array[tree->leaves[i]->pos]->branch[permutation[i] / intSize] |= p;
-        tree->leaves[i]->color = BLACK;
-    }
-    curNode = tree->nodes[tree->rootId];
-    nodeStackPush(stack, curNode);
-    curNode->color = GREY;
-
-    while (stack->curSize != 0) {
-        curNode = nodeStackPeek(stack);
-        nextNode = 0;
-        for (i = 0; i < curNode->neiNum; ++i) {
-            if (curNode->neighbours[i]->color == WHITE) {
-                nextNode = curNode->neighbours[i];
-                break;
-            }
-        }
-        if (nextNode) {
-            nodeStackPush(stack, nextNode);
-            nextNode->color = GREY;
-        } else {
-            for (i = 0; i < curNode->neiNum; ++i) {
-                for (j = 0; j < branchGetIntSize(ba->array[curNode->pos]); ++j) {
-                    ba->array[curNode->pos]->branch[j] |= ba->array[curNode->neighbours[i]->pos]->branch[j];
-                }
-            }
-            nodeStackPop(stack);
-            curNode->color = BLACK;
-        }
-    }
-    nodeStackDelete(stack);
-    return ba;
-} //treeRootedToBranchArray
-
-typedef enum {
-    AddOnVisit,
-    AddOnExit
-} NodeAddType;
-
-unsigned* treeDFS(Tree* tree, unsigned startNodePos, NodeAddType addtype) {
-    unsigned* treeAddOrder = malloc(sizeof(unsigned) * tree->nodesNum);
-    int curSize = 0;
-    int i = 0;
-    Node* curNode = tree->nodes[startNodePos];
-    Node* nextNode = NULL;
-    NodeStack* stack = nodeStackCreate(tree->nodesNum);
-
-    treeWash(tree);
-    nodeStackPush(stack, curNode);
-    curNode->color = BLACK;
-
-    while (stack->curSize != 0) {
-        curNode = nodeStackPeek(stack);
-        if (addtype == AddOnVisit) {
-            treeAddOrder[curSize++] = curNode->pos;
-        }
-        nextNode = curNode;
-        for (i = 0; i < curNode->neiNum; ++i) {
-            nextNode = curNode->neighbours[i];
-            if (nextNode->color == WHITE) {
-                break;
-            }
-        }
-
-        if (nextNode->color == WHITE) {
-            nodeStackPush(stack, nextNode);
-            nextNode->color = BLACK;
-        } else {
-            nodeStackPop(stack);
-
-            if (addtype == AddOnExit) {
-                treeAddOrder[curSize++] = curNode->pos;
-            }
-        }
-    }
-    nodeStackDelete(stack);
-    return treeAddOrder;
-}
-
-unsigned* treeTopologicalSort(Tree* tree) {
-    if (tree->rootId == -1) {
-        fprintf(stderr, "Topologocal sort can't be applied to unrooted tree\n");
-    }
-
-    return treeDFS(tree, tree->rootId, AddOnExit);
-}
-
-// TODO write function description and optimize by removing C-recursion
-void stackCycle(Node* node, NodeStack* stack) {
-    int j;
-    if (node->neiNum > 1) {
-        node->color = BLACK;
-        nodeStackPush(stack, node);
-        for (j = 0; j < node->neiNum; j++) {
-            if (node->neighbours[j]->color != BLACK) {
-                stackCycle(node->neighbours[j], stack);
-            }
-        }
-    } else // (node->neiNum == 1 or 0)
-    {
-        if (node->color != BLACK) {
-            node->color = BLACK;
-            nodeStackPush(stack, node);
-        }
-    }
-} //stackCycle
-
 char** findCommonNamesSet(char** names1, size_t l1, char** names2, size_t l2, size_t* common_size) {
     int i = 0;
     int j = 0;
@@ -178,7 +47,6 @@ char** findCommonNamesSet(char** names1, size_t l1, char** names2, size_t l2, si
     return common_set;
 } //findCommonNamesSet
 
-//TODO remove function
 unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation) {
     int i, j;
     unsigned* result;
@@ -192,7 +60,6 @@ unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, 
             }
         }
     }
-
     return result;
 } //treeRootAndTopSort
 
@@ -453,7 +320,7 @@ int findParent(int elementID, Tree* tree, int* setPermutation) {
     return parentNeiID;
 }
 // returns number of parent-neighbour or 3 if elemenent is root
-int findChilds(int elementID, Tree* tree, int* setPermutation, int* child1,
+int findChilds(int elementID, Tree* tree, unsigned* setPermutation, int* child1,
     int* child2) {
     Node* node = tree->nodes[elementID];
     if (node->neiNum == 2) { // is root
@@ -545,22 +412,22 @@ void countVariants(Branch*** TAB, int a, int w, int b, int c, int x, int y,
 } //countVariants
 
 Branch* MAST(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2, unsigned* setPermutation1, unsigned* setPermutation2) {
-    INT p;
     int b, c, x, y;
     b = 0;
     c = 0;
     x = 0;
     y = 0;
-    int i, j, k;
+    int i, j;
     int posT, posU;
     int a, w;
-    int* variants;
     int* permutation; //permutation of leaf sets between tree1 and tree2
     int* leavesPosArr1; //size = nodes; for every node has -1, for leaf has its pos in leaves
     int* leavesPosArr2; //the same for tree2
     int* randMax;
     int elementA;
     int elementW;
+    int bestValue;
+    int bestCase;
     BranchArray* branchArr1;
     BranchArray* branchArr2;
     Branch* intersection;
@@ -620,7 +487,6 @@ Branch* MAST(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2, unsig
                     }
                 } else //if a or w is a subtree
                 {
-
                     intersection = branchAllocatorGetBranch(brAllocator);
                     if (nodeA->neiNum == 1) //a is a leaf, w is a subtree
                     {
@@ -636,10 +502,8 @@ Branch* MAST(Tree* intree1, Tree* intree2, unsigned* set1, unsigned* set2, unsig
                 }
             } else //nor a nor w are leaves
             {
-                int parentA = findChilds(elementA, tree1, setPermutation1, &b, &c);
-                int parentW = findChilds(elementW, tree2, setPermutation2, &x, &y);
-                int bestValue = -1;
-                int bestCase = -1;
+                bestValue = -1;
+                bestCase = -1;
                 countVariants(TAB, elementA, elementW, b, c, x, y, &bestValue, &bestCase);
                 if (bestValue == -1) {
                     fprintf(stderr, "Critical error in main loop, umast:MAST\n");
@@ -968,14 +832,31 @@ Tree* makeUMASTTree(Branch* br, Tree* tree1) {
     }
 } //makeUMASTTree
 
+void treesToCommonLeaves(Tree* tree1, 
+                         Tree* tree2){
+    char** names1 = treeGetNames(tree1);
+    char** names2 = treeGetNames(tree2);
+    size_t cm_size = 0;
+    char** common_leaves = findCommonNamesSet(names1,
+        tree1->leavesNum,
+        names2,
+        tree2->leavesNum,
+        &cm_size);
+    free(names1);
+    free(names2);
+
+    tree1 = treePrune(tree1, common_leaves, cm_size, 0);
+    tree2 = treePrune(tree2, common_leaves, cm_size, 0);
+    free(common_leaves);
+}
+
 void UMAST(Tree* intree1, Tree* intree2) {
-    int i, j, k, maxNum, rootNum;
+    int i, j, rootNum;
     int** rootPositions;
     unsigned* sortedSet1; //topologically sorted nodes from rooted tree1
     unsigned* sortedSet2; //topologically sorted nodes from rooted tree2
     unsigned* setPermutation1; //for every node of tree1 tells its pos in topologically sorted set
     unsigned* setPermutation2; //the same for tree2
-    Tree** prunedTrees;
     Tree* tree1;
     Tree* tree2;
     Tree* result;
@@ -983,33 +864,16 @@ void UMAST(Tree* intree1, Tree* intree2) {
     Branch* bestBranch;
     int bestLeavesNum;
     Branch* curBranch;
-    char** common_leaves;
-    char** names1;
-    char** names2;
     int curLeavesNum;
-    size_t cm_size;
     BranchAllocator* brAllocator;
 
     tree1 = (Tree*)malloc(sizeof(Tree));
     tree2 = (Tree*)malloc(sizeof(Tree));
 
-    // prune Trees
-    names1 = treeGetNames(intree1);
-    names2 = treeGetNames(intree2);
+    tree1 = treeCopy(intree1, 0);
+    tree2 = treeCopy(intree2, 0);
 
-    cm_size = 0;
-    common_leaves = findCommonNamesSet(names1,
-        intree1->leavesNum,
-        names2,
-        intree2->leavesNum,
-        &cm_size);
-    free(names1);
-    free(names2);
-
-    tree1 = treePrune(intree1, common_leaves, cm_size, 0);
-    tree2 = treePrune(intree2, common_leaves, cm_size, 0);
-    free(common_leaves);
-    //
+    treesToCommonLeaves(tree1, tree2);
 
     rootNum = tree1->nodesNum - 1;
     brAllocator = branchAllocatorCreate(intree1->nodesNum * intree1->nodesNum * rootNum,
@@ -1019,7 +883,10 @@ void UMAST(Tree* intree1, Tree* intree2) {
     umastSet = (Branch**)calloc(sizeof(Branch*), rootNum);
     setPermutation1 = (unsigned*)calloc(sizeof(unsigned), tree1->nodesNum + 1);
     setPermutation2 = (unsigned*)calloc(sizeof(unsigned), tree2->nodesNum + 1);
-    sortedSet2 = treeRootAndTopSort(tree2, 1, 0, setPermutation2);
+
+    tree2 = treeRoot(tree2, 1, 0, 0);
+    sortedSet2 = treeTopologicalSort(tree2);
+    setPermutation2 = calcUnsignedPermutation(sortedSet2, tree2->nodesNum);
 
     Branch**** TAB = (Branch****)calloc(nodeTypeCount, sizeof(Branch***));
 
@@ -1044,8 +911,11 @@ void UMAST(Tree* intree1, Tree* intree2) {
         rootTable[i] = rootTable[i - 1] + tree2->nodesNum;
     }
 
-    for (i = 0; i < rootNum; i++) {
-        sortedSet1 = treeRootAndTopSort(tree1, rootPositions[i][0], rootPositions[i][1], setPermutation1);
+    for (i = 0; i < rootNum; i++){
+        tree1 = treeRoot(tree1, rootPositions[i][0], rootPositions[i][1], 0);
+        sortedSet1 = treeTopologicalSort(tree1);
+        setPermutation1 = calcUnsignedPermutation(sortedSet1, tree1->nodesNum);
+
         umastSet[i] = UMASTStep(tree1, tree2, sortedSet1, sortedSet2, setPermutation1, setPermutation2, TAB, rootTable[i],
             brAllocator);
         tree1 = treeUnRoot(tree1, 0);
@@ -1082,6 +952,40 @@ void UMAST(Tree* intree1, Tree* intree2) {
     free(TAB);
 } //UMAST
 
+void RMAST(Tree* intree1, Tree* intree2)
+{
+    unsigned* sortedSet1;           //topologically sorted nodes from rooted tree1
+    unsigned* sortedSet2;           //topologically sorted nodes from rooted tree2
+    unsigned* setPermutation1;      //for every node of tree1 tells its pos in topologically sorted set
+    unsigned* setPermutation2;      //the same for tree2
+    Branch* maxbranch;
+    Tree* tree1;
+    Tree* tree2;
+    Tree* result;
+
+    tree1 = treeCopy(intree1, 0);
+    tree2 = treeCopy(intree2, 0);
+    treesToCommonLeaves(tree1, tree2);
+
+    setPermutation1 = (unsigned*)calloc(sizeof(unsigned), tree1->nodesNum);
+    setPermutation2 = (unsigned*)calloc(sizeof(unsigned), tree2->nodesNum);
+    sortedSet1 = treeRootAndTopSort(tree1, 1, 0, setPermutation1);
+    sortedSet2 = treeRootAndTopSort(tree2, 1, 0, setPermutation2);
+    maxbranch = MAST(tree1, tree2, sortedSet1, sortedSet2, setPermutation1, setPermutation2);
+    result = makeUMASTTree(maxbranch, tree1);
+    branchDelete(maxbranch);
+    free(sortedSet1);
+    free(sortedSet2); 
+    free(setPermutation1); 
+    free(setPermutation2);
+    if (result)
+    {
+        printf("%d\n", result->leavesNum);
+        treeDelete(result);
+    }
+    return;
+} /* RMAST */
+
 int main(int argc, char** argv) {
     Tree* tree1;
     Tree* tree2;
@@ -1101,12 +1005,15 @@ int main(int argc, char** argv) {
     fprintf(logfile, "UMAST execution started\n");
     fprintf(logfile, "%04d/%02d/%02d %02d:%02d:%02d\n", aTm->tm_year + 1900, aTm->tm_mon + 1,
         aTm->tm_mday, aTm->tm_hour, aTm->tm_min, aTm->tm_sec);
-    tree1 = treeRead(argv[1]);
-    tree2 = treeRead(argv[2]);
+    tree1 = treeRead(argv[1], 0);
+    tree2 = treeRead(argv[2], 0);
     fprintf(logfile, "Trees are read successfully\n");
     fprintf(logfile, "%s\n", treeToString(tree1));
     fprintf(logfile, "%s\n", treeToString(tree2));
     fclose(logfile);
-    UMAST(tree1, tree2);
+    //UMAST(tree1, tree2);
+    treeRoot(tree1, 0, 0, 0);
+    treeRoot(tree2, 0, 0, 0);
+    RMAST(tree1, tree2);
     return 0;
 }

@@ -29,7 +29,6 @@
 
 const nodeTypeCount = 6;
 
-BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation);
 Tree* deleteLeaves(Tree* tree, char** leavesToDelete, int leavesToDeleteAmount);
 Tree** treesPrune(Tree* tree1, Tree* tree2);
 unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation);
