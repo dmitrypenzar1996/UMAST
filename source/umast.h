@@ -27,14 +27,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-const nodeTypeCount = 6;
+const int nodeTypeCount = 6;
 
 Tree* deleteLeaves(Tree* tree, char** leavesToDelete, int leavesToDeleteAmount);
 Tree** treesPrune(Tree* tree1, Tree* tree2);
 unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation);
 int* calculateLeavesPermutation(Tree* tree1, Tree* tree2);
-void countVariants(Branch*** TAB, int a, int w, int b, int c, int x, int y,
-    int* bestValue, int* bestPos);
+void countVariants(Branch*** TAB, int** L_TAB, int** K_TAB, 
+        BranchArray* brAr1, BranchArray* brAr2, 
+        int a, int w, int b, int c, int x, int y,
+    int* bestValue, int* bestPos, int* bestLval);
+
 int** getAllRoots(Tree* tree);
 int* getRandMaxBranch(Branch*** TAB, int rows, int cols);
 Tree* makeMAST(Branch* br, Tree* tree1);

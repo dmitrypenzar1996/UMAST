@@ -407,7 +407,11 @@ char* treeToString(Tree* tree) {
     string = (char*)calloc(sizeof(char), stringMaxSize + 1);
 
     stack = nodeStackCreate(tree->nodesNum);
-    curNode = tree->nodes[0];
+    if (tree->rootId == -1){
+        curNode = tree->nodes[0];
+    }else{
+        curNode = tree->nodes[tree->rootId];
+    }
     stringCurSize = 0;
     string[stringCurSize] = '(';
     ++stringCurSize;
@@ -1349,101 +1353,91 @@ Tree* treePrune(Tree* source, char** leavesNames, size_t leavesNum,
     Node* newNode = NULL;
     Node* nei1 = NULL;
     Node* nei2 = NULL;
-
+    size_t resNum;
     size_t rootPos = 0;
+    if (source->rootId == -1){
     while (source->nodes[rootPos]->neiNum == 1) {
         ++rootPos;
     }
-    if (rootPos >= source->nodesNum)
+    if (rootPos >= source->nodesNum){
         raiseError("Wrong tree structure\n",
             __FILE__, __FUNCTION__, __LINE__);
+    }
+    }else{
+        rootPos = source->rootId;
+    }
 
     nodeStackPush(stack, source->nodes[rootPos]);
     source->nodes[rootPos]->color = GREY;
 
-    while (stack->curSize > 0) {
+    neiResult = malloc(sizeof(Node*) * source->nodesNum);
+    while (stack->curSize > 0){
         curNode = nodeStackPeek(stack);
-        nextNode = NULL;
-        for (i = 0; i < curNode->neiNum; ++i) {
-            if (curNode->neighbours[i]->color == WHITE) {
-                nextNode = curNode->neighbours[i];
-                break;
-            }
-        }
-
-        if (nextNode) {
-            nextNode->color = GREY;
-            nodeStackPush(stack, nextNode);
-        } else // all childs are processed
-        {
-            curNode->color = BLACK;
+        if (curNode->name != NULL){ // isLeaf
             nodeStackPop(stack);
-
-            if (curNode->neiNum == 1) {
-                assert(curNode->name != NULL);
-                if (takeInTree[curNode->pos]) {
-                    newNode = leafCreate(curNode->name);
-                    result->nodes[result->nodesNum] = newNode;
-                    newNode->pos = result->nodesNum++;
-                    result->leaves[result->leavesNum++] = newNode;
-                    nodeStackPush(pruneStack, newNode);
-
-                } else {
-                    nodeStackPush(pruneStack, NULL);
+            curNode->color = BLACK;
+            if (takeInTree[curNode->pos]) {
+                newNode = leafCreate(curNode->name);
+                result->nodes[result->nodesNum] = newNode;
+                newNode->pos = result->nodesNum++;
+                result->leaves[result->leavesNum++] = newNode;
+                nodeStackPush(pruneStack, newNode);
+            }else{
+                nodeStackPush(pruneStack, NULL);
+            }
+        }else{ // inner node
+            nextNode = curNode;
+            for (i = 0; i < curNode->neiNum; ++i){
+                nextNode = curNode->neighbours[i];
+                if (nextNode->color == WHITE){
+                    break;
                 }
-            } else {
-                size_t resNum = 0;
-                neiResult = malloc(sizeof(Node*) * curNode->neiNum);
-
-                for (j = 0; j < curNode->neiNum; ++j) {
-                    if (curNode->neighbours[j]->color == BLACK) {
+            }
+            if (nextNode->color == WHITE){
+                nextNode->color = GREY;
+                nodeStackPush(stack, nextNode);
+            }else{ // all childs are processed
+                nodeStackPop(stack);
+                curNode->color = BLACK;
+                resNum = 0;
+                for (i = 0; i < curNode->neiNum; ++i){ // get all childs in new tree
+                    if (curNode->neighbours[i]->color == BLACK){
                         neiResult[resNum] = nodeStackPeek(pruneStack);
                         nodeStackPop(pruneStack);
-                        if (neiResult[resNum] != NULL)
+                        if (neiResult[resNum] != NULL){
                             ++resNum;
+                        }
                     }
                 }
 
-                if (resNum == 0) {
+                if (resNum == 0){
                     nodeStackPush(pruneStack, NULL);
-                } else if (resNum == 1 && curNode->pos == rootPos && neiResult[0]->neiNum == 2) {
-                    nei1 = neiResult[0]->neighbours[0];
-                    nei2 = neiResult[0]->neighbours[1];
-                    nei1->neighbours[nei1->neiNum - 1] = nei2;
-                    nei2->neighbours[nei2->neiNum - 1] = nei1;
-                    nodeDelete(neiResult[0]);
-                    --result->nodesNum;
-                    nodeStackPush(pruneStack, nei1);
-                } else if (resNum == 1) {
+                }else if (resNum == 1){ // only one saved child, degenerated node
                     nodeStackPush(pruneStack, neiResult[0]);
-                } else if (resNum == 2 && curNode->pos == rootPos) {
-                    nodeAddNeighbour(neiResult[0], neiResult[1], 0);
-                    nodeAddNeighbour(neiResult[1], neiResult[0], 0);
-                    nodeStackPush(pruneStack, neiResult[0]);
-                } else {
+                    if (curNode->pos == source->rootId){ // tree is rooted and only one root child left
+                        result->rootId = neiResult[0]->pos;
+                    }
+                }else if (curNode->pos == rootPos && source->rootId == -1 && resNum == 2){ // tree is not rooted, 'root' has 2 neighbours 
+                    nei1 = neiResult[0];
+                    nei2 = neiResult[1];
+                    nodeAddNeighbour(nei1, nei2, 0);
+                    nodeAddNeighbour(nei2, nei1, 0);
+                }else{
                     newNode = nodeCreate();
                     result->nodes[result->nodesNum] = newNode;
                     newNode->pos = result->nodesNum++;
-
                     for (j = 0; j < resNum; ++j) {
                         nodeAddNeighbour(neiResult[j], newNode, 0);
                         nodeAddNeighbour(newNode, neiResult[j], 0);
                     }
+                    if (curNode->pos == source->rootId){ // tree is rooted and we've copied the root
+                        result->rootId = newNode->pos;
+                    }
                     nodeStackPush(pruneStack, newNode);
                 }
-                free(neiResult);
             }
         }
     }
-
-    result->nodes = realloc(result->nodes, sizeof(Node*) * (result->leavesNum * 2 - 2));
-    if ((pruneStack->curSize != 1) || (result->leavesNum != leavesNum) || (result->leavesNum * 2 - 2 != result->nodesNum)) {
-        printf("pruneStackSize : %d\n", pruneStack->curSize);
-        printf("result Leaves Num %d need %zu\n", result->leavesNum, leavesNum);
-        raiseError("Something've gone wrong\n",
-            __FILE__, __FUNCTION__, __LINE__);
-    }
-    nodeStackPop(pruneStack);
 
     if (calculateLcaFinder) {
         treeLCAFinderCalculate(result);
@@ -1453,6 +1447,7 @@ Tree* treePrune(Tree* source, char** leavesNames, size_t leavesNum,
     nodeStackDelete(pruneStack);
     free(takeInTree);
     treeWash(source);
+    free(neiResult);
 
     return result;
 } /* treePrune */
@@ -1481,6 +1476,11 @@ Tree* treeRoot(Tree* tree, unsigned nodeID, unsigned neighbourID, char newTree) 
             neighbourID, tree->nodes[nodeID]->neiNum);
         exit(1);
     }
+    if (tree->rootId != -1){
+        fprintf(stderr, "Error, tree already has root, umast:treeRoot");
+        exit(1);
+    }
+
     result = tree;
     if (newTree) {
         result = treeCopy(tree, 0);
@@ -1613,15 +1613,14 @@ unsigned* treeDFS(Tree* tree, unsigned startNodePos, NodeAddType addtype) {
 unsigned* treeTopologicalSort(Tree* tree) {
     if (tree->rootId == -1) {
         fprintf(stderr, "Topologocal sort can't be applied to unrooted tree\n");
+        exit(1);
     }
 
     return treeDFS(tree, tree->rootId, AddOnExit);
 }
 
 BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation) {
-    INT p = 1;
     int i = 0;
-    int j = 0;
     unsigned branchNum = tree->nodesNum;
     BranchArray* ba = branchArrayCreate(branchNum);
     NodeStack* stack = nodeStackCreate(tree->nodesNum);
@@ -1641,9 +1640,7 @@ BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation) {
     }
 
     for (i = 0; i < tree->leavesNum; ++i) {
-        p = 1;
-        p = p << (permutation[i] & (intSize - 1));
-        ba->array[tree->leaves[i]->pos]->branch[permutation[i] / intSize] |= p;
+        branchAddLeafUnsafe(ba->array[tree->leaves[i]->pos], permutation[i]);
         tree->leaves[i]->color = BLACK;
     }
     curNode = tree->nodes[tree->rootId];
@@ -1664,9 +1661,8 @@ BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation) {
             nextNode->color = GREY;
         } else {
             for (i = 0; i < curNode->neiNum; ++i) {
-                for (j = 0; j < branchGetIntSize(ba->array[curNode->pos]); ++j) {
-                    ba->array[curNode->pos]->branch[j] |= ba->array[curNode->neighbours[i]->pos]->branch[j];
-                }
+                branchOrDest(ba->array[curNode->pos], ba->array[curNode->neighbours[i]->pos],
+                        ba->array[curNode->pos]);
             }
             nodeStackPop(stack);
             curNode->color = BLACK;

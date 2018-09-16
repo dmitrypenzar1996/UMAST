@@ -381,18 +381,9 @@ int vBranchCompare(const void* branch1, const void* branch2) {
 
 void branchCalculateLeavesPosNum(Branch* br) {
     unsigned i = 0;
-    unsigned j = 0;
-    unsigned k = 0;
     int curSize = 0;
     for (i = 0; i < branchGetIntSize(br); ++i) {
-        j = 0;
-        while (j < intSize) {
-            k = countZeroRightNum((br->branch[i]) >> j);
-            if (k != intSize) {
-                curSize++;
-            }
-            j += k + 1;
-        }
+        curSize += countOnes(br->branch[i]);
     }
     br->leavesNum = curSize;
 }

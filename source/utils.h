@@ -61,4 +61,6 @@ void raiseError(const char* message, const char* fileName, const char* funcName,
 size_t* getPermutationPart(size_t arraySize, size_t partSize);
 
 unsigned* calcUnsignedPermutation(unsigned* set, size_t size);
+
+int countOnes(uint64_t b);
 #endif
