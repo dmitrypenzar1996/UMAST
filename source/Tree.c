@@ -164,6 +164,38 @@ void treeDelete(Tree* tree) {
     return;
 } /* treeDelete */
 
+void treeSwap(Tree* tree1, Tree* tree2){
+    Node** nodesTemp;
+    LCAFinder* lcaTemp;
+    unsigned numTemp;
+    ssize_t rootIdTemp;
+    
+    nodesTemp = tree1->nodes;
+    tree1->nodes = tree2->nodes;
+    tree2->nodes = nodesTemp;
+
+    nodesTemp = tree1->leaves;
+    tree1->leaves = tree2->leaves;
+    tree2->leaves = nodesTemp;
+
+    numTemp = tree1->leavesNum;
+    tree1->leavesNum = tree2->leavesNum;
+    tree2->leavesNum = numTemp;
+
+    numTemp = tree1->nodesNum;
+    tree1->nodesNum = tree2->nodesNum;
+    tree2->nodesNum = numTemp;
+
+    lcaTemp = tree1->lcaFinder;
+    tree1->lcaFinder = tree2->lcaFinder; 
+    tree2->lcaFinder = lcaTemp;
+
+    rootIdTemp = tree1->rootId;
+    tree1->rootId = tree2->rootId;
+    tree2->rootId = rootIdTemp;
+}
+
+
 double readLength(char* string, unsigned* pos) {
     int j;
 
@@ -390,7 +422,7 @@ Tree* treeCopy(Tree* source, char copyLCAFinder) {
 
 char* treeToString(Tree* tree) {
     char* string = NULL;
-    unsigned stringMaxSize = 100000;
+    unsigned stringMaxSize = 1000;
     unsigned stringCurSize;
     NodeStack* stack;
     Node* curNode;
@@ -478,6 +510,7 @@ char* treeToString(Tree* tree) {
     string[stringCurSize] = '\0';
     string = realloc(string, sizeof(char) * (stringCurSize + 1));
 
+    nodeStackDelete(stack);
     treeWash(tree);
     return string;
 } /* treeToString */
@@ -951,7 +984,7 @@ void treeLCAFinderCalculate(Tree* tree) {
         curPos);
     tree->lcaFinder = lcaFinder;
     treeWash(tree);
-    return;
+    nodeStackDelete(stack);
 } /*  treeLCAFinderCalculate */
 
 unsigned treeFindLCADeep(Tree* tree, unsigned leaf1ID, unsigned leaf2ID) {
@@ -1339,7 +1372,7 @@ Tree* treePrune(Tree* source, char** leavesNames, size_t leavesNum,
             }
         }
         if (!isFound) {
-            fprintf(stderr, "%s\n", leavesNames[i]);
+            fprintf(stderr, "|%s|\n", leavesNames[i]);
             raiseError("No such leaf in source tree",
                 __FILE__, __FUNCTION__, __LINE__);
         }
@@ -1356,13 +1389,13 @@ Tree* treePrune(Tree* source, char** leavesNames, size_t leavesNum,
     size_t resNum;
     size_t rootPos = 0;
     if (source->rootId == -1){
-    while (source->nodes[rootPos]->neiNum == 1) {
-        ++rootPos;
-    }
-    if (rootPos >= source->nodesNum){
-        raiseError("Wrong tree structure\n",
-            __FILE__, __FUNCTION__, __LINE__);
-    }
+        while (source->nodes[rootPos]->neiNum == 1) {
+            ++rootPos;
+        }
+        if (rootPos >= source->nodesNum){
+            raiseError("Wrong tree structure\n",
+                __FILE__, __FUNCTION__, __LINE__);
+        }
     }else{
         rootPos = source->rootId;
     }

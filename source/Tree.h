@@ -87,6 +87,7 @@ void treeDelete(Tree* tree);
 double readLength(char* string, unsigned* pos);
 char* readName(char* string, unsigned* pos);
 Tree* treeCopy(Tree* source, char copyLCAFinder);
+void treeSwap(Tree* tree1, Tree* tree2);
 Tree* treeFromNewick(char* newick, char rooted);
 char* treeToString(Tree* tree);
 void treeWash(Tree* tree);

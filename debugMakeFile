@@ -15,25 +15,25 @@ $(LINK_DIR) :
 	if ! [ -d $(LINK_DIR) ]; then mkdir $(LINK_DIR); fi
 
 utils.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/utils.c
-	gcc -O2 -c $(SOURCE_DIR)/utils.c -o $(LINK_DIR)/utils.o
+	gcc -O2 -g -c $(SOURCE_DIR)/utils.c -o $(LINK_DIR)/utils.o
 
 Tree.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/Tree.c
-	gcc -O2 -c $(SOURCE_DIR)/Tree.c -o $(LINK_DIR)/Tree.o
+	gcc -O2 -g -c $(SOURCE_DIR)/Tree.c -o $(LINK_DIR)/Tree.o
 
 RMQ.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/RMQ.c
-	gcc -O2 -c $(SOURCE_DIR)/RMQ.c -o $(LINK_DIR)/RMQ.o
+	gcc -O2 -g -c $(SOURCE_DIR)/RMQ.c -o $(LINK_DIR)/RMQ.o
 
 Branch.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/Branch.c
-	gcc -O2 -c $(SOURCE_DIR)/Branch.c -o $(LINK_DIR)/Branch.o
+	gcc -O2 -g -c $(SOURCE_DIR)/Branch.c -o $(LINK_DIR)/Branch.o
 
 BranchArray.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/BranchArray.c
-	gcc -O2 -c $(SOURCE_DIR)/BranchArray.c -o $(LINK_DIR)/BranchArray.o
+	gcc -O2 -g -c $(SOURCE_DIR)/BranchArray.c -o $(LINK_DIR)/BranchArray.o
 
 BranchAllocator.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/BranchAllocator.c
-	gcc -O2 -c $(SOURCE_DIR)/BranchAllocator.c -o $(LINK_DIR)/BranchAllocator.o
+	gcc -O2 -g -c $(SOURCE_DIR)/BranchAllocator.c -o $(LINK_DIR)/BranchAllocator.o
 
 umast.o : $(SOURCE_DIR) $(LINK_DIR) $(SOURCE_DIR)/umast.c
-	gcc -O2 -c $(SOURCE_DIR)/umast.c -o $(LINK_DIR)/umast.o 
+	gcc -O2 -g -c $(SOURCE_DIR)/umast.c -o $(LINK_DIR)/umast.o 
 
 umast : umast.o utils.o Tree.o RMQ.o Branch.o BranchArray.o BranchAllocator.o
 	gcc $(LINK_DIR)/umast.o $(LINK_DIR)/utils.o\

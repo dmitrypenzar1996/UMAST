@@ -64,6 +64,7 @@ char* readLine(FILE* inFile) {
     if (fgets(buffer, 200, inFile)) {
         memcpy(line, buffer, strlen(buffer) + 1);
     } else {
+        free(line);
         return 0;
     }
 

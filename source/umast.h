@@ -30,7 +30,6 @@
 const int nodeTypeCount = 6;
 
 Tree* deleteLeaves(Tree* tree, char** leavesToDelete, int leavesToDeleteAmount);
-Tree** treesPrune(Tree* tree1, Tree* tree2);
 unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation);
 int* calculateLeavesPermutation(Tree* tree1, Tree* tree2);
 void countVariants(Branch*** TAB, int** L_TAB, int** K_TAB, 
