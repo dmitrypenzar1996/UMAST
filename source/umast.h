@@ -40,6 +40,12 @@ void countVariants(Branch*** TAB, int** L_TAB, int** K_TAB,
 int** getAllRoots(Tree* tree);
 int* getRandMaxBranch(Branch*** TAB, int rows, int cols);
 Tree* makeMAST(Branch* br, Tree* tree1);
-Branch* MAST(Tree* tree1, Tree* tree2, unsigned* set1, unsigned* set2, unsigned* setPermutation1, unsigned* setPermutation2);
+int MAST(Tree* intree1, 
+        Tree* intree2, 
+        Branch** common_set,
+        unsigned* set1,
+        unsigned* set2,
+        unsigned* setPermutation1,
+        unsigned* setPermutation2);
 void UMAST(Tree* tree1, Tree* tree2);
 #endif

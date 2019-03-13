@@ -1492,25 +1492,25 @@ Tree* treeRoot(Tree* tree, unsigned nodeID, unsigned neighbourID, char newTree) 
     Tree* result;
 
     if (tree == 0) {
-        fprintf(stderr, "Error, null tree pointer, umast:treeRoot\n");
+        fprintf(stderr, "Error, null tree pointer, Tree:treeRoot\n");
         exit(1);
     }
     if (tree->leavesNum == 0) {
-        fprintf(stderr, "Error, cannot root empty tree, umast:treeRoot\n");
+        fprintf(stderr, "Error, cannot root empty tree, Tree:treeRoot\n");
         exit(1);
     }
     if (nodeID >= tree->nodesNum) {
-        fprintf(stderr, "Error, node index is out of range, umast:treeRoot\n");
+        fprintf(stderr, "Error, node index is out of range, Tree:treeRoot\n");
         exit(1);
     }
     if (neighbourID >= tree->nodes[nodeID]->neiNum) {
         fprintf(stderr, "Error, neighbour index is out of range, (%d of %d)\
-                umast:treeRoot\n",
+                Tree:treeRoot\n",
             neighbourID, tree->nodes[nodeID]->neiNum);
         exit(1);
     }
     if (tree->rootId != -1){
-        fprintf(stderr, "Error, tree already has root, umast:treeRoot");
+        fprintf(stderr, "Error, tree already has root, Tree:treeRoot");
         exit(1);
     }
 
