@@ -17,7 +17,7 @@
     If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "branch.h"
+#include "Branch.h"
 
 size_t getBitMaskIntSize(unsigned size) {
     if (size % intSize == 0) {
