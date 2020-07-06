@@ -63,4 +63,8 @@ size_t* getPermutationPart(size_t arraySize, size_t partSize);
 unsigned* calcUnsignedPermutation(unsigned* set, size_t size);
 
 int countOnes(uint64_t b);
+
+char** findCommonNamesSet(char** names1, size_t l1, char** names2, size_t l2, size_t* common_size);
+
+int find3MaxPos(int a0, int a1, int a2);
 #endif

@@ -169,7 +169,7 @@ void treeSwap(Tree* tree1, Tree* tree2){
     LCAFinder* lcaTemp;
     unsigned numTemp;
     ssize_t rootIdTemp;
-    
+
     nodesTemp = tree1->nodes;
     tree1->nodes = tree2->nodes;
     tree2->nodes = nodesTemp;
@@ -187,7 +187,7 @@ void treeSwap(Tree* tree1, Tree* tree2){
     tree2->nodesNum = numTemp;
 
     lcaTemp = tree1->lcaFinder;
-    tree1->lcaFinder = tree2->lcaFinder; 
+    tree1->lcaFinder = tree2->lcaFinder;
     tree2->lcaFinder = lcaTemp;
 
     rootIdTemp = tree1->rootId;
@@ -868,7 +868,9 @@ Tree* treeRead(char* inFileName, char rooted) {
 
     inFile = fopen(inFileName, "r");
     if (inFile == NULL) {
-        fprintf(stderr, "Wrong file name or no access to read file, Tree:treeRead\n");
+        fprintf(stderr,
+            "Wrong file name or no access to read file, Tree:treeRead  - %s \n",
+            inFileName);
         exit(1);
     }
     strSize = strTreeSize;
@@ -1450,7 +1452,7 @@ Tree* treePrune(Tree* source, char** leavesNames, size_t leavesNum,
                     if (curNode->pos == source->rootId){ // tree is rooted and only one root child left
                         result->rootId = neiResult[0]->pos;
                     }
-                }else if (curNode->pos == rootPos && source->rootId == -1 && resNum == 2){ // tree is not rooted, 'root' has 2 neighbours 
+                }else if (curNode->pos == rootPos && source->rootId == -1 && resNum == 2){ // tree is not rooted, 'root' has 2 neighbours
                     nei1 = neiResult[0];
                     nei2 = neiResult[1];
                     nodeAddNeighbour(nei1, nei2, 0);
@@ -1704,3 +1706,113 @@ BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation) {
     nodeStackDelete(stack);
     return ba;
 } //treeRootedToBranchArray
+
+int* calculateLeavesPermutation(Tree* tree1, Tree* tree2) {
+    int i;
+    char** leaves1;
+    char** leaves2;
+    int* permutation;
+
+    leaves1 = treeGetNames(tree1);
+    leaves2 = treeGetNames(tree2);
+
+    permutation = calculatePermutation(leaves1, leaves2, tree1->leavesNum);
+    free(leaves1);
+    free(leaves2);
+    return permutation;
+} //calculateLeavesPermutation
+
+int** getAllRoots(Tree* tree) {
+    int i, j, count;
+    unsigned* sortedSet;
+    int** result;
+    Node* curNode;
+
+    result = (int**)calloc(sizeof(int*), (tree->nodesNum - 1));
+
+    for (i = 0; i < (tree->nodesNum - 1); i++) {
+        result[i] = (int*)calloc(sizeof(int), 2);
+    }
+    for (i = 0; i < (tree->nodesNum - 1); i++) {
+        for (j = 0; j < 2; j++) {
+            result[i][j] = -1;
+        }
+    }
+
+    treeWash(tree);
+    for (i = 0; i < tree->nodesNum; i++) {
+        if (tree->nodes[i]->neiNum > 1) {
+            break;
+        }
+    }
+
+    sortedSet = treeDFS(tree, i, AddOnExit);
+
+    treeWash(tree);
+    count = 0;
+    for (i = 0; i < tree->nodesNum; i++) {
+
+        curNode = tree->nodes[sortedSet[i]];
+        curNode->color = BLACK;
+        for (j = 0; j < curNode->neiNum; j++) {
+            if (curNode->neighbours[j]->color == WHITE) {
+                result[count][0] = curNode->pos;
+                result[count][1] = j;
+                count++;
+            }
+        }
+    }
+    free(sortedSet);
+    return result;
+} //getAllRoots
+
+void treesToCommonLeaves(Tree* tree1,
+                         Tree* tree2,
+                         Tree** outtree1,
+                         Tree** outtree2){
+    char** names1 = treeGetNames(tree1);
+    char** names2 = treeGetNames(tree2);
+    size_t cm_size = 0;
+    char** common_leaves = findCommonNamesSet(names1,
+        tree1->leavesNum,
+        names2,
+        tree2->leavesNum,
+        &cm_size);
+
+    free(names1);
+    free(names2);
+
+    if(cm_size == 0){
+        *outtree1 = NULL;
+        *outtree2 = NULL;
+    }else{
+        *outtree1 = treePrune(tree1, common_leaves, cm_size, 0);
+        *outtree2 = treePrune(tree2, common_leaves, cm_size, 0);
+    }
+    free(common_leaves);
+}
+
+Tree* treePruneByBranch(Tree* tree1, Branch* br) {
+    int i;
+    Tree* result;
+    size_t commonLeavesNum = 0;
+    size_t* requiredLeavesPoses = branchGetLeavesPos(br, &commonLeavesNum, tree1->leavesNum);
+    char** requiredLeavesNames;
+    if (commonLeavesNum == tree1->leavesNum) {
+        result = treeCopy(tree1, 0);
+        free(requiredLeavesPoses);
+        return result;
+    } else if (commonLeavesNum == 0) {
+        free(requiredLeavesPoses);
+        return 0;
+    } else {
+        requiredLeavesNames = calloc(commonLeavesNum, sizeof(char*));
+        for (i = 0; i < commonLeavesNum; ++i) {
+            requiredLeavesNames[i] = tree1->leaves[requiredLeavesPoses[i]]->name;
+        }
+        result = treePrune(tree1, requiredLeavesNames, commonLeavesNum, 0);
+        free(requiredLeavesPoses);
+        free(requiredLeavesNames);
+        return result;
+    }
+} //treePruneByBranch

@@ -125,4 +125,11 @@ int* treeGetLeavesPos(Tree* tree);
 BranchArray* treeRootedToBranchArray(Tree* tree, int* permutation);
 unsigned* treeDFS(Tree* tree, unsigned startNodePos, NodeAddType addtype);
 unsigned* treeTopologicalSort(Tree* tree);
+int* calculateLeavesPermutation(Tree* tree1, Tree* tree2);
+int** getAllRoots(Tree* tree);
+void treesToCommonLeaves(Tree* tree1,
+                         Tree* tree2,
+                         Tree** outtree1,
+                         Tree** outtree2);
+Tree* treePruneByBranch(Tree* tree1, Branch* br);
 #endif

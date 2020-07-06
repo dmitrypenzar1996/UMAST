@@ -30,6 +30,8 @@ typedef struct
     INT* branch;
 } Branch;
 
+void branchPrint(Branch* br);
+
 static const char intSize = sizeof(INT) * 8;
 
 size_t getBitMaskIntSize(unsigned size);

@@ -26,26 +26,8 @@
 #include "utils.h"
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include "relatives.h"
 
-const int nodeTypeCount = 6;
-
-Tree* deleteLeaves(Tree* tree, char** leavesToDelete, int leavesToDeleteAmount);
-unsigned* treeRootAndTopSort(Tree* tree, unsigned nodeID, unsigned neighbourID, unsigned* setPermutation);
-int* calculateLeavesPermutation(Tree* tree1, Tree* tree2);
-void countVariants(Branch*** TAB, int** L_TAB, int** K_TAB, 
-        BranchArray* brAr1, BranchArray* brAr2, 
-        int a, int w, int b, int c, int x, int y,
-    int* bestValue, int* bestPos, int* bestLval);
-
-int** getAllRoots(Tree* tree);
-int* getRandMaxBranch(Branch*** TAB, int rows, int cols);
-Tree* makeMAST(Branch* br, Tree* tree1);
-int MAST(Tree* intree1, 
-        Tree* intree2, 
-        Branch** common_set,
-        unsigned* set1,
-        unsigned* set2,
-        unsigned* setPermutation1,
-        unsigned* setPermutation2);
-void UMAST(Tree* tree1, Tree* tree2);
+int UMAST(Tree* intree1, Tree* intree2, Tree** mast_tree);
 #endif

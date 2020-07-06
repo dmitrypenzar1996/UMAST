@@ -243,3 +243,41 @@ int countOnes(uint64_t b){
     b = b + (b >> 32) & 0x0000007F;
     return (int) b;
 }
+
+char** findCommonNamesSet(char** names1, size_t l1, char** names2, size_t l2, size_t* common_size) {
+    int i = 0;
+    int j = 0;
+    int mx = l1 > l2 ? l1 : l2;
+    char** common_set = malloc(sizeof(char**) * mx);
+    size_t cm_set_size = 0;
+    for (i = 0; i < l1; ++i) {
+        for (j = 0; j < l2; ++j) {
+            if (strcmp(names1[i], names2[j]) == 0) {
+                common_set[cm_set_size++] = names1[i];
+                break;
+            }
+        }
+    }
+    if (cm_set_size != 0) {
+        common_set = realloc(common_set, sizeof(char**) * cm_set_size);
+    } else {
+        free(common_set);
+        common_set = NULL;
+    }
+
+    *common_size = cm_set_size;
+    return common_set;
+} //findCommonNamesSet
+
+int find3MaxPos(int a0, int a1, int a2) {
+    int maxPos = 0;
+    int maxVal = a0;
+    if (a1 > maxVal) {
+        maxVal = a1;
+        maxPos = 1;
+    }
+    if (a2 > maxVal) {
+        maxPos = 2;
+    }
+    return maxPos;
+}
